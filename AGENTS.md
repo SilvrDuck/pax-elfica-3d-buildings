@@ -28,8 +28,10 @@ seems arbitrary.
 
 ## Working in parallel
 
-Several agents work on this repo at once. The issue tracker is the plan:
-<https://github.com/SilvrDuck/pax-elfica-3d-buildings/issues>.
+Several agents work on this repo at once. The issues are the plan and the board is their state:
+<https://github.com/SilvrDuck/pax-elfica-3d-buildings/issues>,
+<https://github.com/users/SilvrDuck/projects/1> (Todo, In Progress, Done). Move your issue to
+In Progress when you start and let the PR close it.
 
 - Take one issue at a time. Issues labelled `prêt` have no dependency; `bloqué` ones name what they
   wait on in their body. Assign yourself and comment « en cours » before starting, so nobody else
