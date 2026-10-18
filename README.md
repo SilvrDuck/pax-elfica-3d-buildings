@@ -26,7 +26,7 @@ dans le livre de base (pages 40 à 42) sont toutes là.
 | `F` | compteur d'images et d'appels de rendu |
 
 Une adresse peut ouvrir la maquette dans un état donné, par exemple
-`?level=e1&labels=1` ou `?level=rdc&view=top` pour une vue d'en haut.
+`?level=e1&labels=1`, `?level=rdc&view=top` pour une vue d'en haut, ou `cam=x,y,z,tx,ty,tz` (position de la caméra et point visé, en mètres) pour reproduire un cadrage.
 
 ## Lancer chez soi
 

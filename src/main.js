@@ -1,5 +1,5 @@
 import './style.css';
-import { createScene, webglSupported } from './scene.js';
+import { createScene, webglSupported, parseCamera } from './scene.js';
 import { setupLighting } from './lighting.js';
 import { materialFor } from './materials.js';
 import { loadLevels, LEVELS, LEVEL_BY_ID, levelIndex } from './data/levels.js';
@@ -82,6 +82,12 @@ async function start(container, view) {
   if (params.get('view') === 'top') {
     const sheet = calibration.sheets[levelId] ?? calibration.sheets.rdc;
     view.setTopView(sheet.worldRect);
+  }
+  const cam = parseCamera(params.get('cam'));
+  if (cam) {
+    view.camera.position.set(...cam.position);
+    view.controls.target.set(...cam.target);
+    view.controls.update();
   }
   return { stack, calque, labels };
 }
