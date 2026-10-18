@@ -31,8 +31,8 @@ const LEVELS = [
 // Extent of the inn around the tower template's top-left corner, in cells, used to frame the sub-plan crops.
 const BUILDING_FROM_TOWER = { left: -1, top: -1, width: 25, height: 12 };
 // The grid phase-lock assumes every sub-plan's grid is drawn in step with its walls; the 4e
-// sub-plan's grid is drawn half a cell off, so its lock lands half a cell away. This correction
-// (in cells, x then z) was settled by overlaying the drawn tower on the lower floors' tower.
+// sub-plan's grid is drawn half a cell off, so its lock lands half a cell away. The correction
+// (in cells, x then z) is the one that puts the drawn tower on the lower floors' tower.
 const PERIOD_NUDGE = { e4: [-0.5, 0.5] };
 // The buried silo: the rulebook gives 6 m across and 10 m deep, centred on the cellar's spiral stair.
 const SILO_CENTRE_CELL = [8.6, 8.9];
