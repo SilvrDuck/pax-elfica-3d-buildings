@@ -35,21 +35,21 @@ L.wall([5.0, 6.9], [8.0, 6.9], S);
 L.wall([5.8, 2.95], [8.0, 3.0], S);
 const north = L.wall([8.0, 3.0], [18.5, 3.0], T);
 for (const c of [9.1, 11.0, 12.6, 14.0, 15.9, 17.6]) L.window(north, [c, 3.0], 0.9, glow);
-L.wall([18.5, 3.0], [19.8, 4.0], T);
-L.wall([19.8, 4.0], [21.6, 4.0], T);
-L.wall([21.6, 4.0], [21.6, 5.2], T);
-const eastDoors = L.wall([21.6, 5.2], [20.9, 6.6], T);
-L.door(eastDoors, [21.25, 5.9], 1.0);
-const eastLow = L.wall([20.9, 6.6], [20.5, 7.95], T);
-L.door(eastLow, [20.7, 7.3], 1.0);
-const south = L.wall([3.9, 8.0], [20.5, 7.95], T);
+L.wall([18.5, 3.0], [19.4, 3.5], T);
+L.wall([19.4, 3.5], [21.5, 3.5], T);
+L.wall([21.5, 3.5], [21.5, 4.9], T);
+const eastDoors = L.wall([21.5, 4.9], [21.1, 7.2], T);
+L.door(eastDoors, [21.3, 5.9], 1.0);
+const eastLow = L.wall([21.1, 7.2], [20.3, 7.95], T);
+L.door(eastLow, [20.7, 7.6], 1.0);
+const south = L.wall([3.9, 8.0], [20.3, 7.95], T);
 L.door(south, [4.5, 8.0], 1.0); // vestibule to the bath
 L.door(south, [13.0, 7.97], 1.2); // onto the balcony
 for (const c of [10.2, 11.4, 15.3, 16.9, 18.6]) L.window(south, [c, 7.97], 0.9, glow);
-// Privy in the north-east corner.
-const privy = L.wall([19.8, 4.0], [20.6, 5.5], T);
-L.door(privy, [20.2, 4.75], 0.8);
-L.wall([20.6, 5.5], [21.6, 5.2], T);
+// Privy: a trapezoid in the north-east corner.
+const privy = L.wall([19.4, 3.5], [20.3, 5.1], T);
+L.door(privy, [19.85, 4.3], 0.8);
+L.wall([20.3, 5.1], [21.5, 4.9], T);
 
 // ---- Guest rooms 25–29 along the north side ----------------------------------------------------
 L.wall([8.0, 3.0], [8.0, 6.2], T);
@@ -76,8 +76,8 @@ const planks = 'planks';
 L.floor([[2.55, 1.6], [3.7, 1.6], [3.7, 6.2], [2.9, 6.2], [1.25, 4.6], [1.25, 2.85]], planks);
 L.floor([[3.7, 1.6], [5.1, 1.6], [5.8, 2.95], [5.9, 2.95], [5.9, 6.2], [3.7, 6.2]], planks);
 L.floor([[5.9, 2.95], [8.0, 3.0], [8.0, 6.2], [5.9, 6.2]], planks);
-L.floor([[2.9, 6.2], [20.5, 6.2], [20.9, 6.6], [20.5, 7.95], [3.9, 8.0], [3.5, 6.9]], planks); // corridor and landings
-L.floor([[8.0, 3.0], [18.5, 3.0], [19.8, 4.0], [21.6, 4.0], [21.6, 5.2], [20.5, 6.2], [8.0, 6.2]], planks);
+L.floor([[2.9, 6.2], [21.3, 6.2], [21.1, 7.2], [20.3, 7.95], [3.9, 8.0], [3.5, 6.9]], planks); // corridor and landings
+L.floor([[8.0, 3.0], [18.5, 3.0], [19.4, 3.5], [21.5, 3.5], [21.5, 4.9], [21.3, 6.2], [8.0, 6.2]], planks);
 L.floor([[3.9, 8.0], [9.3, 8.0], [9.3, 11.0], [2.5, 11.0], [2.5, 9.0]], planks);
 L.floor([[11.8, 8.0], [14.7, 8.0], [14.7, 9.3], [11.8, 9.3]], planks);
 
