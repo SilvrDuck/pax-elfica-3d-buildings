@@ -4,6 +4,9 @@ import { readFileSync, existsSync } from 'node:fs';
 import nodePath from 'node:path';
 const path = nodePath.resolve(process.cwd(), 'src/data/calibration.json');
 const INN_LEVELS = ['rdc', 'e1', 'e2', 'e3', 'e4'];
+// The crops are cut from the copyrighted plans and never committed; they exist only where the
+// plans do.
+const cropsPresent = existsSync(nodePath.resolve(process.cwd(), 'public/plans'));
 
 describe('plan calibration', () => {
   it('exists with a grid pitch close to the measured 179 px per cell', () => {
@@ -24,7 +27,7 @@ describe('plan calibration', () => {
       expect(w, `${id} width`).toBeGreaterThan(20);
       expect(w, `${id} width`).toBeLessThan(50);
       expect(h, `${id} height`).toBeGreaterThan(10);
-      expect(existsSync(nodePath.resolve(process.cwd(), 'public', sheet.image)), sheet.image).toBe(true);
+      if (cropsPresent) expect(existsSync(nodePath.resolve(process.cwd(), 'public', sheet.image)), sheet.image).toBe(true);
     }
   });
 
