@@ -37,6 +37,14 @@ export function applySize({ camera, renderer, labelRenderer }, width, height) {
   labelRenderer.setSize(width, height);
 }
 
+/** `cam=x,y,z,tx,ty,tz` from the URL: camera position and orbit target in world metres. */
+export function parseCamera(text) {
+  if (!text) return null;
+  const n = text.split(',').map(Number);
+  if (n.length !== 6 || n.some((v) => !Number.isFinite(v))) return null;
+  return { position: n.slice(0, 3), target: n.slice(3) };
+}
+
 /** Back to the perspective camera at its home position, orbit controls on. */
 export function goHome(view) {
   view.camera = view.perspective;
