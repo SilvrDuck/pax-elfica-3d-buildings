@@ -29,12 +29,12 @@ export function splitWall(wall, openings, storeyH) {
   for (const o of openings) {
     const heights = OPENING_HEIGHTS[o.kind];
     if (!heights) {
-      warnings.push(`${wall.id}: ${o.kind} opening at ${o.at} m is not cut into the wall`);
+      warnings.push(`${wall.id} : l'ouverture « ${o.kind} » à ${o.at} m n'est pas découpée dans le mur`);
       continue;
     }
     let x0 = o.at - o.width / 2, x1 = o.at + o.width / 2;
     if (x0 < 0 || x1 > L) {
-      warnings.push(`${wall.id}: ${o.kind} at ${o.at} m (width ${o.width}) runs past the wall (length ${L}); clamped`);
+      warnings.push(`${wall.id} : « ${o.kind} » à ${o.at} m (largeur ${o.width}) dépasse le mur (longueur ${L}) ; ramené dans le mur`);
       x0 = Math.max(0, x0);
       x1 = Math.min(L, x1);
     }
