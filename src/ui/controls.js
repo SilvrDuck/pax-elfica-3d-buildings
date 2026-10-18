@@ -8,7 +8,7 @@ const EDITABLE = new Set(['INPUT', 'TEXTAREA', 'SELECT']);
  */
 export function bindKeys(stack, { labels, calque, stats } = {}, target = window) {
   const handler = (event) => {
-    if (EDITABLE.has(event.target?.tagName)) return;
+    if (EDITABLE.has(event.target?.tagName) || event.ctrlKey || event.metaKey || event.altKey) return;
     switch (event.key) {
       case 'ArrowUp':
         stack.select(stepLevel(stack.selected, 1));

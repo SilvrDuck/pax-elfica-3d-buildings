@@ -9,12 +9,12 @@ const OPACITY = 0.5;
  * opacity onto that level's floor. Textures load the first time a sheet is shown.
  */
 export class Calque {
-  constructor(scene, calibration, { baseUrl = '' } = {}) {
+  constructor(scene, calibration, { baseUrl = '', loader = new THREE.TextureLoader() } = {}) {
     this.scene = scene;
     this.calibration = calibration;
     this.baseUrl = baseUrl;
     this.planes = new Map();
-    this.loader = new THREE.TextureLoader();
+    this.loader = loader;
     this.level = null;
     this._visible = false;
   }
@@ -33,12 +33,20 @@ export class Calque {
     mesh.position.set(x0 + w / 2, info.elevation + LIFT, z0 + h / 2);
     mesh.renderOrder = 10;
     mesh.visible = false;
-    this.loader.load(this.baseUrl + sheet.image, (texture) => {
-      texture.colorSpace = THREE.SRGBColorSpace;
-      texture.anisotropy = 8;
-      material.map = texture;
-      material.needsUpdate = true;
-    });
+    mesh.userData.loaded = false;
+    this.loader.load(
+      this.baseUrl + sheet.image,
+      (texture) => {
+        texture.colorSpace = THREE.SRGBColorSpace;
+        texture.anisotropy = 8;
+        material.map = texture;
+        material.needsUpdate = true;
+        mesh.userData.loaded = true;
+        this.refresh();
+      },
+      undefined,
+      () => console.warn(`Calque ${id} : image ${sheet.image} introuvable (les plans officiels ne sont pas dans ce dépôt).`),
+    );
     this.scene.add(mesh);
     this.planes.set(id, mesh);
     return mesh;
@@ -66,6 +74,6 @@ export class Calque {
     for (const mesh of this.planes.values()) mesh.visible = false;
     if (!this._visible || !this.level) return;
     const mesh = this.plane(this.level);
-    if (mesh) mesh.visible = true;
+    if (mesh && mesh.userData.loaded) mesh.visible = true;
   }
 }

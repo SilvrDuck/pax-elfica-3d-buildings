@@ -40,6 +40,7 @@ export class LevelStack extends EventTarget {
     this.groups = new Map();
     this.roofGroups = new Map();
     this.shown = new Map();
+    this.opacity = new Map();
     this.tweens = new Map();
     this._selected = 'toits';
     for (const info of LEVELS) {
@@ -80,10 +81,11 @@ export class LevelStack extends EventTarget {
       this.roofGroups.get(covers)?.add(mesh);
     }
     if (json.silo) {
+      // The shaft belongs to the lowest level so it stays when everything above is peeled.
       const silo = buildSilo(json.silo, this.matFor);
-      const siloGroup = this.groups.get('silo1');
-      silo.position.y = -siloGroup.position.y;
-      siloGroup.add(silo);
+      const bottom = this.groups.get('silo2');
+      silo.position.y = -bottom.position.y;
+      bottom.add(silo);
     }
     mergeLevelGroup(group, id);
   }
@@ -112,19 +114,27 @@ export class LevelStack extends EventTarget {
     this.shown.set(key, show);
     const materials = levelMaterials(key);
     this.tweens.get(key)?.cancel();
+    const to = show ? 1 : 0;
     if (!animate || typeof requestAnimationFrame !== 'function') {
       group.visible = show;
       for (const m of materials) m.opacity = 1;
+      this.opacity.set(key, to);
       return;
     }
+    // A fade picks up from wherever the previous one stopped; the materials are set before the
+    // group becomes visible so no frame shows the level at full opacity.
+    const from = this.opacity.get(key) ?? (show ? 0 : 1);
+    for (const m of materials) m.opacity = from;
     group.visible = true;
-    const from = show ? 0 : 1, to = show ? 1 : 0;
     const start = performance.now();
+    const span = FADE_MS * Math.abs(to - from);
     let frame = 0;
     const tick = (now) => {
-      const t = Math.min(1, (now - start) / FADE_MS);
+      const t = span ? Math.min(1, (now - start) / span) : 1;
       const eased = t * (2 - t);
-      for (const m of materials) m.opacity = from + (to - from) * eased;
+      const value = from + (to - from) * eased;
+      for (const m of materials) m.opacity = value;
+      this.opacity.set(key, value);
       if (t < 1) frame = requestAnimationFrame(tick);
       else { group.visible = show; for (const m of materials) m.opacity = 1; this.tweens.delete(key); }
     };
