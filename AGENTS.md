@@ -26,6 +26,26 @@ seems arbitrary.
   trailers or signatures of any kind.
 - **Write as if from the final spec**: no comments or names that narrate how something was changed.
 
+## Working in parallel
+
+Several agents work on this repo at once. The issue tracker is the plan:
+<https://github.com/SilvrDuck/pax-elfica-3d-buildings/issues>.
+
+- Take one issue at a time. Issues labelled `prêt` have no dependency; `bloqué` ones name what they
+  wait on in their body. Assign yourself and comment « en cours » before starting, so nobody else
+  takes it.
+- Labels say who is expected to pick an issue up: `visuel` (look, lighting, models, UI),
+  `moteur` (Three.js engine, builders, performance), `données` (level data against the plans),
+  `infra`.
+- Branch from `main`, named `feature/<issue>-<slug>` or `fix/<issue>-<slug>`. Never push to
+  `main` directly; open a pull request that says `Closes #<issue>`, with before/after screenshots
+  from `npm run shots <level>` for anything visual. CI must be green (`npm test`,
+  `npm run test:legend`, `npm run build`).
+- Each issue names the files it is expected to touch. Stay inside them; if you need a change
+  elsewhere, write it in the PR description or open an issue rather than editing a file another
+  branch owns.
+- Keep PRs small enough to review in ten minutes. Rebase on `main` before asking for review.
+
 ## Layout
 
 | Path | Role |
