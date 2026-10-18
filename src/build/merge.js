@@ -2,6 +2,18 @@ import * as THREE from 'three';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 import { adoptMaterial } from '../materials.js';
 
+/** One geometry per material group of an indexed geometry (BoxGeometry and friends). */
+export function splitByGroups(geometry) {
+  if (!geometry.index || !geometry.groups.length) return [{ materialIndex: 0, geometry }];
+  const index = geometry.index.array;
+  return geometry.groups.map((g) => {
+    const part = new THREE.BufferGeometry();
+    for (const [name, attr] of Object.entries(geometry.attributes)) part.setAttribute(name, attr);
+    part.setIndex(Array.from(index.slice(g.start, g.start + g.count)));
+    return { materialIndex: g.materialIndex ?? 0, geometry: part.toNonIndexed() };
+  });
+}
+
 /**
  * Fuses every mesh of a level group that shares a material (and attribute layout) into one mesh in
  * the group's own frame, so a furnished floor costs a handful of draw calls instead of hundreds.
@@ -13,19 +25,25 @@ export function mergeLevelGroup(group, levelId) {
   const toGroup = new THREE.Matrix4().copy(group.matrixWorld).invert();
   const buckets = new Map();
   const doomed = [];
-  group.traverse((obj) => {
-    if (!obj.isMesh || obj.isInstancedMesh || obj.isSkinnedMesh || Array.isArray(obj.material)) return;
-    const geometry = obj.geometry;
+  const add = (obj, local, sourceMaterial, geometry) => {
     const layout = Object.keys(geometry.attributes).sort().join(',') + (geometry.index ? '|i' : '');
-    const material = adoptMaterial(obj.material, levelId);
+    const material = adoptMaterial(sourceMaterial, levelId);
     const key = `${material.uuid}|${layout}`;
     if (!buckets.has(key)) buckets.set(key, { material, geometries: [], sources: [] });
-    const local = new THREE.Matrix4().multiplyMatrices(toGroup, obj.matrixWorld);
     const g = geometry.clone().applyMatrix4(local);
     for (const name of Object.keys(g.attributes)) if (!['position', 'normal', 'uv', 'color'].includes(name)) g.deleteAttribute(name);
     g.morphAttributes = {};
     buckets.get(key).geometries.push(g);
     buckets.get(key).sources.push({ obj, local });
+  };
+  group.traverse((obj) => {
+    if (!obj.isMesh || obj.isInstancedMesh || obj.isSkinnedMesh) return;
+    const local = new THREE.Matrix4().multiplyMatrices(toGroup, obj.matrixWorld);
+    if (Array.isArray(obj.material)) {
+      for (const part of splitByGroups(obj.geometry)) add(obj, local, obj.material[part.materialIndex] ?? obj.material[0], part.geometry);
+    } else {
+      add(obj, local, obj.material, obj.geometry);
+    }
     doomed.push(obj);
   });
   for (const obj of doomed) obj.removeFromParent();

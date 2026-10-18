@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import { LEVELS, LEVEL_BY_ID, levelIndex } from './data/levels.js';
-import { levelMaterials } from './materials.js';
+import { levelMaterials, setSubdued } from './materials.js';
 import { buildWall } from './build/walls.js';
 import { buildFloor } from './build/floors.js';
 import { buildStair } from './build/stairs.js';
@@ -42,6 +42,8 @@ export class LevelStack extends EventTarget {
     this.shown = new Map();
     this.opacity = new Map();
     this.tweens = new Map();
+    this.subdued = new Map();
+    this.subduedTweens = new Map();
     this._selected = 'toits';
     for (const info of LEVELS) {
       const group = new THREE.Group();
@@ -102,11 +104,49 @@ export class LevelStack extends EventTarget {
     if (!LEVEL_BY_ID.has(id)) return;
     this._selected = id;
     const { levels, roofsCovering } = visibleSet(id);
+    const sel = levelIndex(id);
     for (const info of LEVELS) {
       this.setShown(info.id, this.groups.get(info.id), levels.has(info.id), animate);
       this.setShown(roofKey(info.id), this.roofGroups.get(info.id), roofsCovering.has(info.id), animate);
+      // Everything under the active level is a supporting role: same hue, less light.
+      const below = id !== 'toits' && levelIndex(info.id) < sel;
+      this.setSubdued(info.id, below, animate);
+      this.setSubdued(roofKey(info.id), below && levelIndex(info.id) < sel - 1, animate);
     }
     this.dispatchEvent(new CustomEvent('change', { detail: { id } }));
+  }
+
+  /** World-space bounds of a level's own geometry (lights excluded). */
+  bounds(id) {
+    const group = this.groups.get(id);
+    const box = new THREE.Box3();
+    group.updateMatrixWorld(true);
+    group.traverse((o) => { if (o.isMesh) box.expandByObject(o); });
+    return box;
+  }
+
+  setSubdued(key, on, animate) {
+    const to = on ? 1 : 0;
+    const from = this.subdued.get(key) ?? 0;
+    if (from === to) return;
+    const materials = levelMaterials(key);
+    this.subduedTweens.get(key)?.cancel();
+    if (!animate || typeof requestAnimationFrame !== 'function') {
+      for (const m of materials) setSubdued(m, to);
+      this.subdued.set(key, to);
+      return;
+    }
+    const start = performance.now();
+    let frame = 0;
+    const tick = (now) => {
+      const t = Math.min(1, (now - start) / FADE_MS);
+      const value = from + (to - from) * t * (2 - t);
+      for (const m of materials) setSubdued(m, value);
+      this.subdued.set(key, value);
+      if (t < 1) frame = requestAnimationFrame(tick); else this.subduedTweens.delete(key);
+    };
+    frame = requestAnimationFrame(tick);
+    this.subduedTweens.set(key, { cancel: () => cancelAnimationFrame(frame) });
   }
 
   setShown(key, group, show, animate) {

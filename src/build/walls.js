@@ -19,7 +19,10 @@ export function buildWall(wall, openings, levelInfo, matFor) {
   const t = THICKNESS[wall.material] ?? THICKNESS.stone;
   const { pieces, holes, warnings } = splitWall(wall, openings, levelInfo.height);
   for (const w of warnings) console.warn(w);
-  const material = matFor(wall.material, levelInfo.id);
+  const side = matFor(wall.material, levelInfo.id);
+  const cap = matFor('cut', levelInfo.id);
+  // BoxGeometry groups: +x, -x, +y (top), -y, +z, -z. The top reads as the cut through the storey.
+  const material = [side, side, cap, side, side, side];
   const place = (mesh, along, y) => {
     mesh.position.set(wall.a[0] + dir[0] * along, y, wall.a[1] + dir[1] * along);
     mesh.rotation.y = yaw;

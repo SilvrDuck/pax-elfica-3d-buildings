@@ -18,7 +18,30 @@ export const PALETTE = {
   windowGlow: '#ffb347',
   gold: '#c9a227',
   silver: '#c8ccd4',
+  cut: '#1c1a1f',
 };
+
+/** A level that is not the active one recedes: same hue, less saturation, less light. */
+export function subduedColor(color) {
+  const hsl = {};
+  color.getHSL(hsl);
+  return new THREE.Color().setHSL(hsl.h, hsl.s * 0.4, Math.max(0.06, hsl.l * 0.55));
+}
+
+/** Blends a material between its base look (t = 0) and its subdued look (t = 1). */
+export function setSubdued(material, t) {
+  const u = material.userData;
+  if (!u.baseColor) rememberBase(material);
+  material.color.lerpColors(u.baseColor, u.subduedColor, t);
+  if (u.baseEmissive !== undefined) material.emissiveIntensity = u.baseEmissive * (1 - 0.7 * t);
+}
+
+function rememberBase(material) {
+  const u = material.userData;
+  u.baseColor = material.color.clone();
+  u.subduedColor = subduedColor(material.color);
+  if (material.emissive && material.emissiveIntensity) u.baseEmissive = material.emissiveIntensity;
+}
 
 const cache = new Map();
 const byLevel = new Map();
@@ -45,6 +68,7 @@ export function materialFor(name, levelId = 'shared') {
     material.emissiveIntensity = 1.6;
   }
   material.name = key;
+  rememberBase(material);
   cache.set(key, material);
   if (!byLevel.has(levelId)) byLevel.set(levelId, []);
   byLevel.get(levelId).push(material);
@@ -71,6 +95,7 @@ export function adoptMaterial(material, levelId) {
   copy.transparent = true;
   copy.opacity = 1;
   copy.name = `${material.name || 'gltf'}|${levelId}`;
+  rememberBase(copy);
   adopted.set(key, copy);
   if (!byLevel.has(levelId)) byLevel.set(levelId, []);
   byLevel.get(levelId).push(copy);
