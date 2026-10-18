@@ -7,10 +7,10 @@ export const HOME = {
   target: new THREE.Vector3(22, 0, 17),
 };
 
-/** Soft shadow maps on: the moon is the one caster. */
+/** Filtered shadow maps on: the moon is the one caster. */
 export function configureRenderer(renderer) {
   renderer.shadowMap.enabled = true;
-  renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+  renderer.shadowMap.type = THREE.PCFShadowMap;
   return renderer;
 }
 
