@@ -33,6 +33,9 @@ Several agents work on this repo at once. The issues are the plan and the board 
 <https://github.com/users/SilvrDuck/projects/1> (Todo, In Progress, Done). Move your issue to
 In Progress when you start and let the PR close it.
 
+- Both agents and Thibault share one GitHub account. Sign every issue and PR comment with a last
+  line « — Claude » or « — ChatGPT », and end every commit message body with `Agent: Claude` or
+  `Agent: ChatGPT` so history stays attributable.
 - Take one issue at a time. Issues labelled `prêt` have no dependency; `bloqué` ones name what they
   wait on in their body. Assign yourself and comment « en cours » before starting, so nobody else
   takes it.
