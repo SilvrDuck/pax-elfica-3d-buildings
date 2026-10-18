@@ -43,6 +43,9 @@ function rememberBase(material) {
   if (material.emissive && material.emissiveIntensity) u.baseEmissive = material.emissiveIntensity;
 }
 
+/** Floor materials carry the baked contact occlusion as vertex colours. */
+export const FLOORS = new Set(['planks', 'dirt', 'flagstone', 'cobbles', 'water', 'thatch']);
+
 const cache = new Map();
 const byLevel = new Map();
 
@@ -62,6 +65,7 @@ export function materialFor(name, levelId = 'shared') {
     roughness: 0.9,
     metalness: 0,
     side: THREE.DoubleSide,
+    vertexColors: FLOORS.has(name),
   });
   if (name === 'windowGlow') {
     material.emissive = new THREE.Color(color);

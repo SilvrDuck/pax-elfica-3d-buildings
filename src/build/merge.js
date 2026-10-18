@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
-import { adoptMaterial } from '../materials.js';
+import { adoptMaterial, FLOORS } from '../materials.js';
 
 /** One geometry per material group of an indexed geometry (BoxGeometry and friends). */
 export function splitByGroups(geometry) {
@@ -32,6 +32,9 @@ export function mergeLevelGroup(group, levelId) {
     if (!buckets.has(key)) buckets.set(key, { material, geometries: [], sources: [] });
     const g = geometry.clone().applyMatrix4(local);
     for (const name of Object.keys(g.attributes)) if (!['position', 'normal', 'uv', 'color'].includes(name)) g.deleteAttribute(name);
+    if (material.vertexColors && !g.getAttribute('color')) {
+      g.setAttribute('color', new THREE.BufferAttribute(new Float32Array(g.getAttribute('position').count * 3).fill(1), 3));
+    }
     g.morphAttributes = {};
     buckets.get(key).geometries.push(g);
     buckets.get(key).sources.push({ obj, local });
@@ -64,7 +67,8 @@ export function mergeLevelGroup(group, levelId) {
         continue;
       }
       const mesh = new THREE.Mesh(merged, material);
-      mesh.castShadow = true;
+      // Floors only receive: they never shade anything and would double the shadow pass.
+      mesh.castShadow = !FLOORS.has(material.name.split('|')[0]);
       mesh.receiveShadow = true;
       group.add(mesh);
     }
