@@ -8,6 +8,14 @@ import { buildRoof } from './build/roofs.js';
 import { buildSilo } from './build/silo.js';
 import { buildLight } from './lighting.js';
 import { mergeLevelGroup } from './build/merge.js';
+import { subdivide, bakeFloorOcclusion } from './build/ao.js';
+import { polygonArea } from './build/geometry.js';
+
+// Rooms and the courtyard get a fine mesh for the contact occlusion; the street, the river and
+// the ground beyond the enclosure are large and nearly unoccluded, a coarse mesh is enough.
+const FLOOR_CELL_M = 0.6;
+const COARSE_CELL_M = 2.5;
+const COARSE_ABOVE_M2 = 150;
 
 const FADE_MS = 300;
 
@@ -70,7 +78,17 @@ export class LevelStack extends EventTarget {
     const openingsByWall = new Map();
     for (const o of json.openings ?? []) openingsByWall.set(o.wall, [...(openingsByWall.get(o.wall) ?? []), o]);
     for (const wall of json.walls ?? []) group.add(buildWall(wall, openingsByWall.get(wall.id) ?? [], info, this.matFor));
-    for (const floor of json.floors ?? []) group.add(buildFloor(floor, info, this.matFor));
+    const occluders = {
+      walls: json.walls ?? [],
+      props: (json.props ?? []).map((p) => ({ x: p.x, z: p.z, footprint: this.propLibrary?.catalog?.[p.asset]?.footprint })),
+    };
+    for (const floor of json.floors ?? []) {
+      const mesh = buildFloor(floor, info, this.matFor);
+      mesh.geometry = subdivide(mesh.geometry, polygonArea(floor.polygon) > COARSE_ABOVE_M2 ? COARSE_CELL_M : FLOOR_CELL_M);
+      mesh.updateMatrix();
+      bakeFloorOcclusion(mesh, occluders);
+      group.add(mesh);
+    }
     for (const stair of json.stairs ?? []) group.add(buildStair(stair, info, this.matFor));
     for (const light of json.lights ?? []) {
       const point = buildLight(light, { elevation: 0 });
@@ -114,6 +132,14 @@ export class LevelStack extends EventTarget {
       this.setSubdued(roofKey(info.id), below && levelIndex(info.id) < sel - 1, animate);
     }
     this.dispatchEvent(new CustomEvent('change', { detail: { id } }));
+  }
+
+  /** World-space bounds of every level's geometry. */
+  allBounds() {
+    const box = new THREE.Box3();
+    for (const id of this.groups.keys()) box.union(this.bounds(id));
+    for (const roofs of this.roofGroups.values()) { roofs.updateMatrixWorld(true); roofs.traverse((o) => { if (o.isMesh) box.expandByObject(o); }); }
+    return box;
   }
 
   /** World-space bounds of a level's own geometry (lights excluded). */

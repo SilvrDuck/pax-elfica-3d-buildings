@@ -7,6 +7,13 @@ export const HOME = {
   target: new THREE.Vector3(22, 0, 17),
 };
 
+/** Soft shadow maps on: the moon is the one caster. */
+export function configureRenderer(renderer) {
+  renderer.shadowMap.enabled = true;
+  renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+  return renderer;
+}
+
 /** Three r186 renders through WebGL 2 only; WebGL 1 counts as unsupported. */
 export function webglSupported() {
   try {
@@ -78,8 +85,9 @@ export function createScene(container, { width = window.innerWidth, height = win
 
   const renderer = new THREE.WebGLRenderer({ antialias: true });
   renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  configureRenderer(renderer);
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
-  renderer.toneMappingExposure = 1.35;
+  renderer.toneMappingExposure = 1.6;
   renderer.setSize(width, height);
   container.appendChild(renderer.domElement);
 
@@ -100,6 +108,7 @@ export function createScene(container, { width = window.innerWidth, height = win
   );
   ground.rotation.x = -Math.PI / 2;
   ground.position.set(22, -0.01, 17);
+  ground.receiveShadow = true;
   scene.add(ground);
 
   const view = { scene, camera, perspective: camera, renderer, labelRenderer, controls, ground, setTopView, home: (box) => goHome(view, box) };

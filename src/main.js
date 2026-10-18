@@ -1,6 +1,6 @@
 import './style.css';
 import { createScene, webglSupported, parseCamera } from './scene.js';
-import { setupLighting } from './lighting.js';
+import { setupLighting, fitShadowToBox } from './lighting.js';
 import { materialFor } from './materials.js';
 import { loadLevels, LEVELS, LEVEL_BY_ID, levelIndex } from './data/levels.js';
 import { validateLevel } from './data/schema.js';
@@ -42,13 +42,13 @@ export function mount(container) {
     event.preventDefault();
     showFatal(container, CONTEXT_LOST);
   });
-  setupLighting(view.scene);
+  const lights = setupLighting(view.scene);
   const app = { view, stack: null, ready: null };
-  app.ready = start(container, view).then((parts) => Object.assign(app, parts));
+  app.ready = start(container, view, lights).then((parts) => Object.assign(app, parts));
   return app;
 }
 
-async function start(container, view) {
+async function start(container, view, lights) {
   const params = new URLSearchParams(window.location.search);
   const levels = await loadLevels();
   for (const [id, json] of levels) {
@@ -56,6 +56,7 @@ async function start(container, view) {
   }
   const propLibrary = await PropLibrary.load(propCatalog, { matFor: materialFor, baseUrl: import.meta.env.BASE_URL });
   const stack = new LevelStack(view.scene, levels, { matFor: materialFor, propLibrary });
+  fitShadowToBox(lights.moon, stack.allBounds());
   const calque = new Calque(view.scene, calibration, { baseUrl: import.meta.env.BASE_URL });
   const labels = new Labels(view.scene, levels);
   stack.addEventListener('change', (e) => {

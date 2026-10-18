@@ -71,7 +71,7 @@ describe('lighting', () => {
   it('adds the dusk hemisphere and moon to a scene', () => {
     const scene = new Scene();
     setupLighting(scene);
-    const kinds = scene.children.map((c) => c.type).sort();
+    const kinds = scene.children.filter((c) => c.isLight).map((c) => c.type).sort();
     expect(kinds).toEqual(['DirectionalLight', 'HemisphereLight']);
   });
 });
