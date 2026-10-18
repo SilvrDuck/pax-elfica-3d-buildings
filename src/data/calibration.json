@@ -1,0 +1,158 @@
+{
+  "pxPerCell": 179,
+  "cellM": 1.5,
+  "sheetPxPerM": 119.33333333333333,
+  "gridOrigin": [
+    1.458,
+    1.257
+  ],
+  "silo": {
+    "centre": [
+      14.358,
+      14.607
+    ],
+    "radius": 3,
+    "depth": 10
+  },
+  "sheets": {
+    "rdc": {
+      "file": "Auberge de l_Epée 1-RDC.jpg",
+      "crop": [
+        0,
+        0,
+        5176,
+        4000
+      ],
+      "offsetPx": [
+        0,
+        0
+      ],
+      "worldRect": [
+        0,
+        0,
+        43.374,
+        33.52
+      ],
+      "image": "plans/rdc.jpg",
+      "towerScore": 9971.1
+    },
+    "e1": {
+      "file": "Auberge de l_Epée 2-1er étage.jpg",
+      "crop": [
+        0,
+        0,
+        5176,
+        4000
+      ],
+      "offsetPx": [
+        4,
+        10
+      ],
+      "worldRect": [
+        0.034,
+        0.084,
+        43.374,
+        33.52
+      ],
+      "image": "plans/e1.jpg",
+      "towerScore": 8375.5
+    },
+    "e2": {
+      "file": "Auberge de l_Epée 3-étages et toits.jpg",
+      "crop": [
+        0,
+        0,
+        4000,
+        2148
+      ],
+      "offsetPx": [
+        172,
+        385
+      ],
+      "worldRect": [
+        1.441,
+        3.226,
+        33.52,
+        18
+      ],
+      "image": "plans/e2.jpg",
+      "towerScore": 5653.5
+    },
+    "e3": {
+      "file": "Auberge de l_Epée 3-étages et toits.jpg",
+      "crop": [
+        0,
+        1681,
+        4000,
+        2148
+      ],
+      "offsetPx": [
+        237,
+        -1456
+      ],
+      "worldRect": [
+        1.986,
+        1.885,
+        33.52,
+        18
+      ],
+      "image": "plans/e3.jpg",
+      "towerScore": 5144
+    },
+    "e4": {
+      "file": "Auberge de l_Epée 3-étages et toits.jpg",
+      "crop": [
+        0,
+        3493,
+        4000,
+        1683
+      ],
+      "offsetPx": [
+        202.5,
+        -3334.5
+      ],
+      "worldRect": [
+        1.697,
+        1.328,
+        33.52,
+        14.103
+      ],
+      "image": "plans/e4.jpg",
+      "towerScore": 5048.9
+    },
+    "silo1": {
+      "file": "Auberge de l_Epée 3-étages et toits.jpg",
+      "crop": [
+        1691,
+        3002,
+        823,
+        823
+      ],
+      "offsetPx": null,
+      "worldRect": [
+        10.908,
+        11.157,
+        6.9,
+        6.9
+      ],
+      "image": "plans/silo1.jpg"
+    },
+    "silo2": {
+      "file": "Auberge de l_Epée 3-étages et toits.jpg",
+      "crop": [
+        2497,
+        3002,
+        823,
+        823
+      ],
+      "offsetPx": null,
+      "worldRect": [
+        10.908,
+        11.157,
+        6.9,
+        6.9
+      ],
+      "image": "plans/silo2.jpg"
+    }
+  }
+}

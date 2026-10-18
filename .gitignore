@@ -1,0 +1,8 @@
+node_modules/
+dist/
+vendor/
+verification/*.png
+.superpowers/
+
+# Crops of the official plans (copyrighted, Les XII Singes): regenerated locally by tools/calibrate.mjs.
+public/plans/

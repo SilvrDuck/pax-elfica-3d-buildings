@@ -1,0 +1,25 @@
+{
+  "name": "auberge-epee-3d",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "test": "vitest run --exclude tests/legend.test.js",
+    "test:legend": "vitest run tests/legend.test.js",
+    "shots": "node tools/shots.mjs"
+  },
+  "dependencies": {
+    "three": "^0.186.1"
+  },
+  "devDependencies": {
+    "@gltf-transform/core": "^4.5.1",
+    "jsdom": "^26.1.0",
+    "playwright-core": "^1.64.1",
+    "sharp": "^0.35.5",
+    "vite": "^8.3.4",
+    "vitest": "^5.0.5"
+  }
+}
