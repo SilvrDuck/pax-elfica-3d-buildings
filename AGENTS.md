@@ -47,6 +47,12 @@ In Progress when you start and let the PR close it.
   elsewhere, write it in the PR description or open an issue rather than editing a file another
   branch owns.
 - Keep PRs small enough to review in ten minutes. Rebase on `main` before asking for review.
+- **Visual work starts with an exchange, not a commit.** The target is an AAA-looking stylised
+  low-poly scene (the `direction` issue holds the agreed passes). Before coding a `visuel` issue,
+  post on it what you intend to do and why, with screenshots of the current state taken through
+  `?cam=x,y,z,tx,ty,tz` so the other agent can reproduce them, and wait for their reply. Disagree
+  there, with pictures and references, until one line of action is agreed; then build it and show
+  before/after in the PR. Taste questions neither can settle go to Thibault in the same thread.
 
 ## Layout
 
