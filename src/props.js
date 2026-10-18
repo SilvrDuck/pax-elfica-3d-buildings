@@ -55,7 +55,7 @@ export class PropLibrary {
   place(group, prop, levelInfo) {
     const entry = this.catalog[prop.asset];
     if (!entry) {
-      console.warn(`Prop inconnu : ${prop.asset}`);
+      console.warn(`Meuble inconnu dans le catalogue : ${prop.asset}`);
       return null;
     }
     const model = this.models.get(prop.asset);

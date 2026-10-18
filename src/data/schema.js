@@ -15,64 +15,64 @@ const isPolygon = (poly) => Array.isArray(poly) && poly.length >= 3 && poly.ever
 export function validateLevel(level) {
   const errors = [];
   const err = (msg) => errors.push(msg);
-  if (!level || typeof level !== 'object') return ['level is not an object'];
-  if (!LEVEL_BY_ID.has(level.id)) err(`unknown level id "${level.id}"`);
+  if (!level || typeof level !== 'object') return ['le niveau n\'est pas un objet'];
+  if (!LEVEL_BY_ID.has(level.id)) err(`niveau inconnu « ${level.id} »`);
   for (const key of ['walls', 'openings', 'floors', 'stairs', 'rooms', 'props', 'lights', 'roofs']) {
-    if (!Array.isArray(level[key])) err(`"${key}" must be an array`);
+    if (!Array.isArray(level[key])) err(`« ${key} » doit être un tableau`);
   }
   if (errors.length) return errors;
 
   const wallIds = new Set();
   level.walls.forEach((w, i) => {
     const name = w.id || `walls[${i}]`;
-    if (!w.id) err(`${name}: missing id`);
-    else if (wallIds.has(w.id)) err(`${name}: duplicate id`);
+    if (!w.id) err(`${name} : id manquant`);
+    else if (wallIds.has(w.id)) err(`${name} : id en double`);
     wallIds.add(w.id);
-    if (!isPoint(w.a) || !isPoint(w.b)) err(`${name}: endpoints a and b must be [x, z]`);
-    if (!MATERIALS.includes(w.material)) err(`${name}: material "${w.material}" not in ${MATERIALS.join('|')}`);
-    if (w.h !== undefined && !(Number.isFinite(w.h) && w.h > 0)) err(`${name}: h must be a positive number`);
-    if (w.base !== undefined && !Number.isFinite(w.base)) err(`${name}: base must be a number`);
+    if (!isPoint(w.a) || !isPoint(w.b)) err(`${name} : les extrémités a et b doivent être [x, z]`);
+    if (!MATERIALS.includes(w.material)) err(`${name} : matériau « ${w.material} » hors de ${MATERIALS.join('|')}`);
+    if (w.h !== undefined && !(Number.isFinite(w.h) && w.h > 0)) err(`${name} : h doit être un nombre positif`);
+    if (w.base !== undefined && !Number.isFinite(w.base)) err(`${name} : base doit être un nombre`);
   });
   level.openings.forEach((o, i) => {
     const name = `openings[${i}]`;
-    if (!wallIds.has(o.wall)) err(`${name}: unknown wall "${o.wall}"`);
-    if (!Number.isFinite(o.at) || !(o.width > 0)) err(`${name}: needs numeric at and positive width`);
-    if (!OPENING_KINDS.includes(o.kind)) err(`${name}: kind "${o.kind}" not in ${OPENING_KINDS.join('|')}`);
+    if (!wallIds.has(o.wall)) err(`${name} : mur inconnu « ${o.wall} »`);
+    if (!Number.isFinite(o.at) || !(o.width > 0)) err(`${name} : at doit être un nombre et width positif`);
+    if (!OPENING_KINDS.includes(o.kind)) err(`${name} : kind « ${o.kind} » hors de ${OPENING_KINDS.join('|')}`);
   });
   level.floors.forEach((f, i) => {
-    if (!isPolygon(f.polygon)) err(`floors[${i}]: polygon needs at least three [x, z] points`);
-    if (!FLOOR_MATERIALS.includes(f.material)) err(`floors[${i}]: material "${f.material}" not in ${FLOOR_MATERIALS.join('|')}`);
+    if (!isPolygon(f.polygon)) err(`floors[${i}] : polygon doit avoir au moins trois points [x, z]`);
+    if (!FLOOR_MATERIALS.includes(f.material)) err(`floors[${i}] : matériau « ${f.material} » hors de ${FLOOR_MATERIALS.join('|')}`);
   });
   level.stairs.forEach((s, i) => {
-    if (!STAIR_KINDS.includes(s.kind)) err(`stairs[${i}]: kind "${s.kind}" not in ${STAIR_KINDS.join('|')}`);
-    if (!isPoint(s.from) || !isPoint(s.to)) err(`stairs[${i}]: from and to must be [x, z]`);
-    if (!(s.width > 0)) err(`stairs[${i}]: width must be positive`);
-    if (!LEVEL_BY_ID.has(s.toLevel)) err(`stairs[${i}]: unknown toLevel "${s.toLevel}"`);
+    if (!STAIR_KINDS.includes(s.kind)) err(`stairs[${i}] : kind « ${s.kind} » hors de ${STAIR_KINDS.join('|')}`);
+    if (!isPoint(s.from) || !isPoint(s.to)) err(`stairs[${i}] : from et to doivent être [x, z]`);
+    if (!(s.width > 0)) err(`stairs[${i}] : width doit être positif`);
+    if (!LEVEL_BY_ID.has(s.toLevel)) err(`stairs[${i}] : toLevel inconnu « ${s.toLevel} »`);
   });
   level.rooms.forEach((r, i) => {
-    if (!Number.isInteger(r.number)) err(`rooms[${i}]: number must be an integer`);
-    if (typeof r.name !== 'string' || !r.name) err(`rooms[${i}]: name must be a non-empty string`);
-    if (!isPolygon(r.polygon)) err(`rooms[${i}]: polygon needs at least three [x, z] points`);
+    if (!Number.isInteger(r.number)) err(`rooms[${i}] : number doit être un entier`);
+    if (typeof r.name !== 'string' || !r.name) err(`rooms[${i}] : name doit être une chaîne non vide`);
+    if (!isPolygon(r.polygon)) err(`rooms[${i}] : polygon doit avoir au moins trois points [x, z]`);
   });
   level.props.forEach((p, i) => {
-    if (typeof p.asset !== 'string' || !p.asset) err(`props[${i}]: asset must be a string`);
-    if (!Number.isFinite(p.x) || !Number.isFinite(p.z)) err(`props[${i}]: x and z must be numbers`);
-    if (p.rot !== undefined && !Number.isFinite(p.rot)) err(`props[${i}]: rot must be a number`);
+    if (typeof p.asset !== 'string' || !p.asset) err(`props[${i}] : asset doit être une chaîne`);
+    if (!Number.isFinite(p.x) || !Number.isFinite(p.z)) err(`props[${i}] : x et z doivent être des nombres`);
+    if (p.rot !== undefined && !Number.isFinite(p.rot)) err(`props[${i}] : rot doit être un nombre`);
   });
   level.lights.forEach((l, i) => {
-    if (![l.x, l.y, l.z].every(Number.isFinite)) err(`lights[${i}]: x, y and z must be numbers`);
-    if (!LIGHT_KINDS.includes(l.kind)) err(`lights[${i}]: kind "${l.kind}" not in ${LIGHT_KINDS.join('|')}`);
+    if (![l.x, l.y, l.z].every(Number.isFinite)) err(`lights[${i}] : x, y et z doivent être des nombres`);
+    if (!LIGHT_KINDS.includes(l.kind)) err(`lights[${i}] : kind « ${l.kind} » hors de ${LIGHT_KINDS.join('|')}`);
   });
   level.roofs.forEach((r, i) => {
-    if (!Array.isArray(r.rect) || r.rect.length !== 4 || !r.rect.every(Number.isFinite)) err(`roofs[${i}]: rect must be [x, z, w, d]`);
-    if (!['x', 'z', 'point'].includes(r.ridge)) err(`roofs[${i}]: ridge must be "x", "z" or "point"`);
-    if (!(r.pitch > 0 && r.pitch < 90)) err(`roofs[${i}]: pitch must be in degrees between 0 and 90`);
-    if (!ROOF_MATERIALS.includes(r.material)) err(`roofs[${i}]: material "${r.material}" not in ${ROOF_MATERIALS.join('|')}`);
-    if (!LEVEL_BY_ID.has(r.covers)) err(`roofs[${i}]: unknown covers "${r.covers}"`);
+    if (!Array.isArray(r.rect) || r.rect.length !== 4 || !r.rect.every(Number.isFinite)) err(`roofs[${i}] : rect doit être [x, z, w, d]`);
+    if (!['x', 'z', 'point'].includes(r.ridge)) err(`roofs[${i}] : ridge doit être « x », « z » ou « point »`);
+    if (!(r.pitch > 0 && r.pitch < 90)) err(`roofs[${i}] : pitch doit être un angle en degrés entre 0 et 90`);
+    if (!ROOF_MATERIALS.includes(r.material)) err(`roofs[${i}] : matériau « ${r.material} » hors de ${ROOF_MATERIALS.join('|')}`);
+    if (!LEVEL_BY_ID.has(r.covers)) err(`roofs[${i}] : covers inconnu « ${r.covers} »`);
   });
   if (level.silo !== undefined) {
     const s = level.silo;
-    if (!isPoint(s.centre) || !(s.radius > 0) || !(s.depth > 0)) err('silo must have centre [x, z], radius and depth');
+    if (!isPoint(s.centre) || !(s.radius > 0) || !(s.depth > 0)) err('silo doit avoir centre [x, z], radius et depth');
   }
   return errors;
 }

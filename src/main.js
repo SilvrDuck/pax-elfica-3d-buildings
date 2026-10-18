@@ -52,7 +52,7 @@ async function start(container, view) {
   const params = new URLSearchParams(window.location.search);
   const levels = await loadLevels();
   for (const [id, json] of levels) {
-    for (const problem of validateLevel(json)) console.warn(`${id}: ${problem}`);
+    for (const problem of validateLevel(json)) console.warn(`Niveau ${id} : ${problem}`);
   }
   const propLibrary = await PropLibrary.load(propCatalog, { matFor: materialFor, baseUrl: import.meta.env.BASE_URL });
   const stack = new LevelStack(view.scene, levels, { matFor: materialFor, propLibrary });
