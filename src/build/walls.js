@@ -32,18 +32,20 @@ export function buildWall(wall, openings, levelInfo, matFor) {
   for (const o of openings) {
     const hole = holes.find((h) => o.at >= h.x0 - 1e-6 && o.at <= h.x1 + 1e-6);
     if (!hole) continue;
+    const width = Math.min(o.width, hole.x1 - hole.x0);
+    const x0 = Math.max(hole.x0, o.at - o.width / 2);
     if (o.kind === 'door') {
-      const leaf = new THREE.Mesh(new THREE.BoxGeometry(o.width, hole.y1 - 0.05, DOOR_LEAF_T), matFor('timber', levelInfo.id));
-      leaf.position.x = o.width / 2;
+      const leaf = new THREE.Mesh(new THREE.BoxGeometry(width, hole.y1 - 0.05, DOOR_LEAF_T), matFor('timber', levelInfo.id));
+      leaf.position.x = width / 2;
       const hinge = new THREE.Group();
       hinge.add(leaf);
       hinge.rotation.y = (DOOR_OPEN_DEG * Math.PI) / 180;
       const pivot = new THREE.Group();
       pivot.add(hinge);
-      place(pivot, o.at - o.width / 2, (hole.y1 - 0.05) / 2);
+      place(pivot, x0, (hole.y1 - 0.05) / 2);
     } else if (o.kind === 'window' && o.glow) {
-      const pane = new THREE.Mesh(new THREE.BoxGeometry(o.width, hole.y1 - hole.y0, 0.02), matFor('windowGlow', levelInfo.id));
-      place(pane, o.at, (hole.y0 + hole.y1) / 2);
+      const pane = new THREE.Mesh(new THREE.BoxGeometry(width, hole.y1 - hole.y0, 0.02), matFor('windowGlow', levelInfo.id));
+      place(pane, x0 + width / 2, (hole.y0 + hole.y1) / 2);
     }
   }
   return group;

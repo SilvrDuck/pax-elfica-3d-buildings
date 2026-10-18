@@ -109,3 +109,13 @@ html, body {
   background: var(--panel);
   border-radius: 4px;
 }
+
+.levels button.toggle {
+  font-size: 0.8rem;
+  color: var(--ink-dim);
+}
+
+.levels button.toggle[aria-pressed="true"] {
+  color: var(--ink);
+  border-color: var(--accent);
+}

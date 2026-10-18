@@ -2,7 +2,7 @@ import './style.css';
 import { createScene, webglSupported } from './scene.js';
 import { setupLighting } from './lighting.js';
 import { materialFor } from './materials.js';
-import { loadLevels, LEVEL_BY_ID, levelIndex } from './data/levels.js';
+import { loadLevels, LEVELS, LEVEL_BY_ID, levelIndex } from './data/levels.js';
 import { validateLevel } from './data/schema.js';
 import calibration from './data/calibration.json';
 import propCatalog from './data/props.json';
@@ -13,17 +13,35 @@ import { Labels } from './labels.js';
 import { mountLevelSelector } from './ui/levelSelector.js';
 import { bindKeys } from './ui/controls.js';
 
+const NO_WEBGL =
+  "WebGL n'est pas disponible dans ce navigateur. " +
+  "Ouvrez la page dans Chromium ou Firefox avec l'accélération graphique activée.";
+const CONTEXT_LOST = "Le rendu 3D s'est interrompu (contexte WebGL perdu). Rechargez la page.";
+
+function showFatal(container, text) {
+  const p = document.createElement('p');
+  p.className = 'fatal';
+  p.textContent = text;
+  container.replaceChildren(p);
+}
+
 export function mount(container) {
   if (!webglSupported()) {
-    const p = document.createElement('p');
-    p.className = 'fatal';
-    p.textContent =
-      "WebGL n'est pas disponible dans ce navigateur. " +
-      "Ouvrez la page dans Chromium ou Firefox avec l'accélération graphique activée.";
-    container.replaceChildren(p);
+    showFatal(container, NO_WEBGL);
     return null;
   }
-  const view = createScene(container);
+  let view;
+  try {
+    view = createScene(container);
+  } catch (err) {
+    console.warn(`Création du rendu WebGL impossible : ${err.message}`);
+    showFatal(container, NO_WEBGL);
+    return null;
+  }
+  view.renderer.domElement.addEventListener('webglcontextlost', (event) => {
+    event.preventDefault();
+    showFatal(container, CONTEXT_LOST);
+  });
   setupLighting(view.scene);
   const app = { view, stack: null, ready: null };
   app.ready = start(container, view).then((parts) => Object.assign(app, parts));
@@ -45,9 +63,16 @@ async function start(container, view) {
     labels.setLevel(e.detail.id);
     view.ground.visible = levelIndex(e.detail.id) >= levelIndex('rdc');
   });
-  mountLevelSelector(container, stack, { onHome: () => view.controls.reset() });
+  mountLevelSelector(container, stack, { onHome: () => view.controls.reset(), labels, calque });
   const stats = mountStats(container, view.renderer);
   bindKeys(stack, { labels, calque, stats });
+
+  // Each selection lights a different set of point lights, which is part of the shader cache key:
+  // compile every variant now rather than in the middle of a fade at the table.
+  for (const info of LEVELS) {
+    stack.select(info.id, { animate: false });
+    view.renderer.compile(view.scene, view.camera);
+  }
 
   const requested = params.get('level');
   const levelId = LEVEL_BY_ID.has(requested) ? requested : 'toits';

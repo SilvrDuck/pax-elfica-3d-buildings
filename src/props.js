@@ -32,21 +32,23 @@ export class PropLibrary {
     this.models = new Map();
     const loader = load ?? defaultLoader();
     const files = new Map();
+    const pending = [];
     for (const [id, entry] of Object.entries(catalog)) {
       if (entry.pack === 'primitive' || !entry.file) continue;
       const url = `${baseUrl}assets/${entry.pack}/${entry.file}`;
-      if (!files.has(url)) files.set(url, loader(url).catch((err) => { console.warn(`Prop ${id} introuvable (${url}): ${err.message}`); return null; }));
-      this.models.set(id, files.get(url));
+      if (!files.has(url)) {
+        files.set(url, loader(url).catch((err) => {
+          console.warn(`Modèle ${id} introuvable (${url}) : ${err.message}. Un volume de substitution le remplace.`);
+          return null;
+        }));
+      }
+      pending.push(files.get(url).then((model) => { if (model) this.models.set(id, model); }));
     }
-    this.ready = Promise.all(this.models.values()).then(() => this);
-    this.ready.then(() => { for (const [id, p] of this.models) p.then((m) => this.models.set(id, m)); });
+    this.ready = Promise.all(pending).then(() => this);
   }
 
-  static async load(catalog, options) {
-    const lib = new PropLibrary(catalog, options);
-    await lib.ready;
-    await Promise.resolve();
-    return lib;
+  static load(catalog, options) {
+    return new PropLibrary(catalog, options).ready;
   }
 
   /** Adds `prop` = { asset, x, z, rot, scale? } to a level group, level-local coordinates. */
@@ -59,7 +61,7 @@ export class PropLibrary {
     const model = this.models.get(prop.asset);
     const yaw = (-(prop.rot ?? 0) * Math.PI) / 180;
     let object;
-    if (model && typeof model.then !== 'function') {
+    if (model) {
       const inner = model.scene.clone(true);
       const box = new THREE.Box3().setFromObject(inner);
       const fit = fitTransform({ min: box.min.toArray(), max: box.max.toArray() }, entry.footprint);
@@ -72,8 +74,9 @@ export class PropLibrary {
       object.position.set(prop.x, 0, prop.z);
       object.rotation.y = yaw + ((entry.yaw ?? 0) * Math.PI) / 180;
     } else {
-      const [w, d] = entry.footprint;
-      const h = entry.height ?? 1;
+      const k = prop.scale ?? 1;
+      const [w, d] = entry.footprint.map((v) => v * k);
+      const h = (entry.height ?? 1) * k;
       const geometry = entry.shape === 'cylinder'
         ? new THREE.CylinderGeometry(w / 2, w / 2, h, 24)
         : new THREE.BoxGeometry(w, h, d);

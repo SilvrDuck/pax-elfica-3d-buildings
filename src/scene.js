@@ -7,10 +7,11 @@ export const HOME = {
   target: new THREE.Vector3(22, 0, 17),
 };
 
+/** Three r186 renders through WebGL 2 only; WebGL 1 counts as unsupported. */
 export function webglSupported() {
   try {
     const canvas = document.createElement('canvas');
-    return Boolean(canvas.getContext('webgl2') || canvas.getContext('webgl'));
+    return Boolean(canvas.getContext('webgl2'));
   } catch {
     return false;
   }
@@ -56,8 +57,6 @@ export function createScene(container, { width = window.innerWidth, height = win
   ground.rotation.x = -Math.PI / 2;
   ground.position.set(22, -0.01, 17);
   scene.add(ground);
-
-  scene.add(new THREE.HemisphereLight('#2b3a5c', '#3a2a1e', 0.55));
 
   const resize = (w = window.innerWidth, h = window.innerHeight) => applySize({ camera, renderer, labelRenderer }, w, h);
   window.addEventListener('resize', () => resize());
