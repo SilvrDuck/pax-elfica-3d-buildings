@@ -63,7 +63,8 @@ async function start(container, view) {
     labels.setLevel(e.detail.id);
     view.ground.visible = levelIndex(e.detail.id) >= levelIndex('rdc');
   });
-  mountLevelSelector(container, stack, { onHome: () => view.home(), labels, calque });
+  const home = () => view.home(stack.selected === 'toits' ? null : stack.bounds(stack.selected));
+  mountLevelSelector(container, stack, { onHome: home, labels, calque });
   const stats = mountStats(container, view.renderer);
   bindKeys(stack, { labels, calque, stats });
 

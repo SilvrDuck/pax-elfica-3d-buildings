@@ -45,11 +45,28 @@ export function parseCamera(text) {
   return { position: n.slice(0, 3), target: n.slice(3) };
 }
 
-/** Back to the perspective camera at its home position, orbit controls on. */
-export function goHome(view) {
+/**
+ * Camera placement that looks at a box's centre from the home direction, far enough for the box
+ * to fit the view at the given aspect and vertical fov (degrees), with a little air around it.
+ */
+export function frameBox(box, aspect, fov, margin = 1.15) {
+  const target = box.getCenter(new THREE.Vector3());
+  const size = box.getSize(new THREE.Vector3());
+  const radius = (Math.hypot(size.x, size.z) / 2) * margin;
+  const vFov = (fov * Math.PI) / 180;
+  const hFov = 2 * Math.atan(Math.tan(vFov / 2) * aspect);
+  const distance = Math.max(radius / Math.sin(vFov / 2), radius / Math.sin(hFov / 2));
+  const dir = HOME.position.clone().sub(HOME.target).normalize();
+  return { position: target.clone().addScaledVector(dir, distance), target };
+}
+
+/** Back to the perspective camera, orbit controls on, framed on `box` when one is given. */
+export function goHome(view, box = null, { animate = true } = {}) {
   view.camera = view.perspective;
   view.controls.enabled = true;
-  view.controls.reset();
+  if (!box) { view.controls.reset(); return; }
+  const { position, target } = frameBox(box, view.perspective.aspect, view.perspective.fov);
+  view.flyTo(position, target, animate);
 }
 
 export function createScene(container, { width = window.innerWidth, height = window.innerHeight } = {}) {
@@ -85,7 +102,23 @@ export function createScene(container, { width = window.innerWidth, height = win
   ground.position.set(22, -0.01, 17);
   scene.add(ground);
 
-  const view = { scene, camera, perspective: camera, renderer, labelRenderer, controls, ground, setTopView, home: () => goHome(view) };
+  const view = { scene, camera, perspective: camera, renderer, labelRenderer, controls, ground, setTopView, home: (box) => goHome(view, box) };
+
+  // Eased camera move; a second call cancels the first.
+  let flight = 0;
+  view.flyTo = (position, target, animate = true) => {
+    cancelAnimationFrame(flight);
+    if (!animate) { camera.position.copy(position); controls.target.copy(target); controls.update(); return; }
+    const p0 = camera.position.clone(), t0 = controls.target.clone(), start = performance.now(), ms = 700;
+    const step = (now) => {
+      const t = Math.min(1, (now - start) / ms), e = t < 0.5 ? 2 * t * t : 1 - (-2 * t + 2) ** 2 / 2;
+      camera.position.lerpVectors(p0, position, e);
+      controls.target.lerpVectors(t0, target, e);
+      controls.update();
+      if (t < 1) flight = requestAnimationFrame(step);
+    };
+    flight = requestAnimationFrame(step);
+  };
   view.resize = (w = window.innerWidth, h = window.innerHeight) => applySize({ camera: view.camera, renderer, labelRenderer }, w, h);
   window.addEventListener('resize', () => view.resize());
 
