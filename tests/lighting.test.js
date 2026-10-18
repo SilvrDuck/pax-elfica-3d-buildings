@@ -2,6 +2,7 @@ import { describe, it, expect } from 'vitest';
 import { Scene } from 'three';
 import { PALETTE, materialFor, levelMaterials } from '../src/materials.js';
 import { LIGHT_KINDS, buildLight, setupLighting } from '../src/lighting.js';
+import { loadLevels } from '../src/data/levels.js';
 
 describe('materials', () => {
   it('names the palette colours', () => {
@@ -37,9 +38,9 @@ describe('materials', () => {
 
 describe('lighting', () => {
   it('defines the four warm light kinds', () => {
-    expect(LIGHT_KINDS.hearth).toEqual({ color: '#ff8c3a', intensity: 25, distance: 9 });
-    expect(LIGHT_KINDS.lantern.distance).toBe(6);
-    expect(LIGHT_KINDS.candle.intensity).toBe(3);
+    expect(LIGHT_KINDS.hearth).toEqual({ color: '#ff8c3a', intensity: 40, distance: 11 });
+    expect(LIGHT_KINDS.lantern.distance).toBe(8);
+    expect(LIGHT_KINDS.candle.intensity).toBe(5);
     expect(LIGHT_KINDS.window.color).toBe('#ffb347');
   });
 
@@ -47,9 +48,24 @@ describe('lighting', () => {
     const light = buildLight({ x: 1, y: 1.2, z: 2, kind: 'hearth' }, { elevation: 3 });
     expect(light.position.toArray()).toEqual([1, 4.2, 2]);
     expect(light.color.getHexString()).toBe('ff8c3a');
-    expect(light.intensity).toBe(25);
+    expect(light.intensity).toBe(40);
     expect(light.decay).toBe(2);
     expect(light.castShadow).toBe(false);
+  });
+
+  it('uses emissive panes instead of point lights for windows', () => {
+    const light = buildLight({ x: 1, y: 1.2, z: 2, kind: 'window' }, { elevation: 3 });
+    expect(light.isPointLight).not.toBe(true);
+    expect(light.position.toArray()).toEqual([1, 4.2, 2]);
+  });
+
+  it('keeps the complete inn near the sixty-point-light budget', async () => {
+    const levels = await loadLevels();
+    const points = [...levels.values()].flatMap((level) => level.lights ?? [])
+      .map((light) => buildLight(light, { elevation: 0 }))
+      .filter((light) => light.isPointLight);
+    expect(points.length).toBeGreaterThanOrEqual(50);
+    expect(points.length).toBeLessThanOrEqual(65);
   });
 
   it('adds the dusk hemisphere and moon to a scene', () => {
