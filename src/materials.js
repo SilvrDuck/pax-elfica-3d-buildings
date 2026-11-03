@@ -71,7 +71,7 @@ export function materialFor(name, levelId = 'shared') {
   });
   if (name === 'windowGlow' || name === 'ember') {
     material.emissive = new THREE.Color(color);
-    material.emissiveIntensity = name === 'ember' ? 2.2 : 1.6;
+    material.emissiveIntensity = name === 'ember' ? 1.3 : 1.6;
   }
   material.name = key;
   material.userData.palette = true;
