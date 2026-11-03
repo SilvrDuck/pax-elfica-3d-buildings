@@ -171,7 +171,10 @@ export function createScene(container, { width = window.innerWidth, height = win
     return top;
   }
 
+  // The counter shown by key F must cover every pass of the frame, not only the last one.
+  renderer.info.autoReset = false;
   function render() {
+    renderer.info.reset();
     if (controls.enabled) controls.update();
     const composer = view.composer;
     if (composer) {
