@@ -2,6 +2,8 @@ import './style.css';
 import { createScene, webglSupported, parseCamera, parseVector } from './scene.js';
 import { setWallFloor } from './build/ao.js';
 import { buildSky, setupFog } from './atmosphere.js';
+import { loadTextureCatalog } from './textures.js';
+import textureCatalog from './data/textures.json';
 import { setupLighting, fitShadowToBox } from './lighting.js';
 import { materialFor } from './materials.js';
 import { loadLevels, LEVELS, LEVEL_BY_ID, levelIndex } from './data/levels.js';
@@ -62,6 +64,7 @@ async function start(container, view, lights) {
   if (moonAt) lights.moon.position.set(...moonAt);
   if (params.has('ao')) setWallFloor(params.get('ao'));
   const levels = await loadLevels();
+  await loadTextureCatalog(textureCatalog, { baseUrl: import.meta.env.BASE_URL });
   for (const [id, json] of levels) {
     for (const problem of validateLevel(json)) console.warn(`Niveau ${id} : ${problem}`);
   }

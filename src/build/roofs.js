@@ -50,13 +50,19 @@ function buildGable(roof, matFor) {
   ];
   const index = [0, 1, 2, 0, 2, 3, 4, 5, 6, 4, 6, 7, 8, 9, 10, 11, 12, 13];
   const positions = new Float32Array(local.length * 3);
+  // UVs in metres: along the ridge, and down the slope from the ridge (gables: along and up).
+  const slopeLen = Math.hypot(span / 2 + EAVES_M, h + drop);
+  const uvs = new Float32Array(local.length * 2);
   local.forEach(([u, y, v], i) => {
     const px = alongX ? x + u : x + w / 2 + v;
     const pz = alongX ? z + d / 2 + v : z + u;
     positions.set([px, y, pz], i * 3);
+    const down = i < 8 ? (1 - (y + drop) / (h + drop)) * slopeLen : y;
+    uvs.set([u - u0, down], i * 2);
   });
   const geometry = new THREE.BufferGeometry();
   geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+  geometry.setAttribute('uv', new THREE.BufferAttribute(uvs, 2));
   geometry.setIndex(index);
   return finish(geometry, roof, matFor);
 }
@@ -123,10 +129,18 @@ function buildPyramid(roof, matFor) {
   const x0 = x - EAVES_M, x1 = x + w + EAVES_M, z0 = z - EAVES_M, z1 = z + d + EAVES_M;
   const apex = [x + w / 2, h, z + d / 2];
   const corners = [[x0, -drop, z0], [x1, -drop, z0], [x1, -drop, z1], [x0, -drop, z1]];
-  const positions = [];
-  for (let i = 0; i < 4; i++) positions.push(...corners[i], ...corners[(i + 1) % 4], ...apex);
+  const positions = [], uvs = [];
+  for (let i = 0; i < 4; i++) {
+    const a = corners[i], b = corners[(i + 1) % 4];
+    const edge = Math.hypot(b[0] - a[0], b[2] - a[2]);
+    const mid = [(a[0] + b[0]) / 2, (a[1] + b[1]) / 2, (a[2] + b[2]) / 2];
+    const rise = Math.hypot(apex[0] - mid[0], apex[1] - mid[1], apex[2] - mid[2]);
+    positions.push(...a, ...b, ...apex);
+    uvs.push(0, rise, edge, rise, edge / 2, 0);
+  }
   const geometry = new THREE.BufferGeometry();
   geometry.setAttribute('position', new THREE.BufferAttribute(new Float32Array(positions), 3));
+  geometry.setAttribute('uv', new THREE.BufferAttribute(new Float32Array(uvs), 2));
   return finish(geometry, roof, matFor);
 }
 
