@@ -2,8 +2,10 @@ import { describe, it, expect } from 'vitest';
 import { visibleSet, stepLevel } from '../src/stack.js';
 
 describe('visibleSet', () => {
-  it('shows a level and everything below it', () => {
-    expect([...visibleSet('e1').levels].sort()).toEqual(['e1', 'rdc', 'silo1', 'silo2']);
+  it('shows a level and everything below it, except the silo buried under the ground slab', () => {
+    expect([...visibleSet('e1').levels].sort()).toEqual(['e1', 'rdc']);
+    expect([...visibleSet('rdc').levels].sort()).toEqual(['rdc']);
+    expect([...visibleSet('silo1').levels].sort()).toEqual(['silo1', 'silo2']);
   });
 
   it('shows a roof only once the storey it covers is below the selection', () => {
@@ -12,9 +14,9 @@ describe('visibleSet', () => {
     expect(visibleSet('e3').roofsCovering.has('e3')).toBe(false);
   });
 
-  it('shows everything on toits', () => {
+  it('shows everything above ground on toits', () => {
     const v = visibleSet('toits');
-    expect(v.levels.size).toBe(8);
+    expect(v.levels.size).toBe(6);
     expect([...v.roofsCovering].sort()).toEqual(['e1', 'e2', 'e3', 'e4', 'rdc', 'silo1', 'silo2']);
   });
 });

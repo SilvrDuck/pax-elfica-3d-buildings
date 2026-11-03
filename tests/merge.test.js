@@ -52,3 +52,15 @@ describe('mergeLevelGroup', () => {
     expect(m1.transparent).toBe(true);
   });
 });
+
+describe('adoptMaterial', () => {
+  it('shares one level copy between materials that render the same way', async () => {
+    const { adoptMaterial } = await import('../src/materials.js');
+    const a = new MeshStandardMaterial({ color: '#aabbcc' });
+    const b = new MeshStandardMaterial({ color: '#aabbcc' });
+    const c = new MeshStandardMaterial({ color: '#112233' });
+    expect(adoptMaterial(a, 'sig-test')).toBe(adoptMaterial(b, 'sig-test'));
+    expect(adoptMaterial(a, 'sig-test')).not.toBe(adoptMaterial(c, 'sig-test'));
+    expect(adoptMaterial(a, 'sig-test')).not.toBe(adoptMaterial(a, 'sig-other'));
+  });
+});
