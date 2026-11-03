@@ -49,6 +49,7 @@ export function mount(container) {
   setupFog(view.scene);
   const app = { view, stack: null, ready: null };
   app.ready = start(container, view, lights).then((parts) => Object.assign(app, parts));
+  if (typeof window !== 'undefined') window.auberge = app;
   return app;
 }
 
