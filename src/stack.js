@@ -6,6 +6,7 @@ import { buildFloor } from './build/floors.js';
 import { buildStair } from './build/stairs.js';
 import { buildRoof } from './build/roofs.js';
 import { buildSilo } from './build/silo.js';
+import { buildChimney } from './build/chimney.js';
 import { buildLight } from './lighting.js';
 import { mergeLevelGroup } from './build/merge.js';
 import { subdivide, bakeFloorOcclusion } from './build/ao.js';
@@ -104,6 +105,7 @@ export class LevelStack extends EventTarget {
       const mesh = buildRoof(roof, (name) => this.matFor(name, roofKey(covers)));
       this.roofGroups.get(covers)?.add(mesh);
     }
+    for (const chimney of json.chimneys ?? []) group.add(buildChimney(chimney, (name) => this.matFor(name, id)));
     if (json.silo) {
       // The shaft belongs to the lowest level so it stays when everything above is peeled.
       const silo = buildSilo(json.silo, this.matFor);

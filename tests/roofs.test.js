@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { MeshBasicMaterial, Box3 } from 'three';
 import { buildRoof, ridgeHeight, EAVES_M } from '../src/build/roofs.js';
+const slopesOf = (g) => g.getObjectByName('slopes');
 
 const matFor = () => new MeshBasicMaterial();
 
@@ -12,7 +13,7 @@ describe('roofs', () => {
 
   it('builds a gable over the rect with 0.4 m eaves, ridge along x', () => {
     expect(EAVES_M).toBe(0.4);
-    const mesh = buildRoof({ rect: [10, 20, 12, 6], ridge: 'x', pitch: 45, material: 'tile', covers: 'e1' }, matFor);
+    const mesh = slopesOf(buildRoof({ rect: [10, 20, 12, 6], ridge: 'x', pitch: 45, material: 'tile', covers: 'e1' }, matFor));
     const box = new Box3().setFromObject(mesh);
     expect(box.min.x).toBeCloseTo(10 - 0.4, 5);
     expect(box.max.x).toBeCloseTo(22 + 0.4, 5);
@@ -24,13 +25,13 @@ describe('roofs', () => {
   });
 
   it('turns the ridge along z when asked', () => {
-    const mesh = buildRoof({ rect: [0, 0, 4, 10], ridge: 'z', pitch: 45, material: 'tile', covers: 'rdc' }, matFor);
+    const mesh = slopesOf(buildRoof({ rect: [0, 0, 4, 10], ridge: 'z', pitch: 45, material: 'tile', covers: 'rdc' }, matFor));
     const box = new Box3().setFromObject(mesh);
     expect(box.max.y).toBeCloseTo(2, 5);
   });
 
   it('builds a pyramid when the ridge is a point', () => {
-    const mesh = buildRoof({ rect: [0, 0, 6, 6], ridge: 'point', pitch: 45, material: 'tile', covers: 'e4' }, matFor);
+    const mesh = slopesOf(buildRoof({ rect: [0, 0, 6, 6], ridge: 'point', pitch: 45, material: 'tile', covers: 'e4' }, matFor));
     const box = new Box3().setFromObject(mesh);
     expect(box.max.y).toBeCloseTo(3, 5);
     expect(mesh.geometry.getAttribute('position').count).toBe(12);
