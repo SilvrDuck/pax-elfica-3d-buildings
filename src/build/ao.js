@@ -6,7 +6,7 @@ let WALL_FLOOR = 0.55;
 
 /** Darkest factor at the foot of a wall (0.2–1); returns the value in force. */
 export function setWallFloor(v) {
-  const n = Number(v);
+  const n = typeof v === 'number' ? v : typeof v === 'string' && v.trim() !== '' ? Number(v) : Number.NaN;
   WALL_FLOOR = Math.min(1, Math.max(0.2, Number.isFinite(n) ? n : 0.55));
   return WALL_FLOOR;
 }

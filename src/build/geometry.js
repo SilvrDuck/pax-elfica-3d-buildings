@@ -26,7 +26,17 @@ const MULLION_T = 0.06;
  * Boxes that dress an opening, in wall-local coordinates: x along the wall, y up from the floor,
  * z across the wall (positive = outer face). Each is { name, material, w, h, d, x, y, z }.
  */
-export function openingTrim(kind, hole, t) {
+export function openingTrim(kind, hole, t, L = Infinity) {
+  return trimParts(kind, hole, t).map((p) => clampAlong(p, L));
+}
+
+// Keeps a trim box inside [0, L] along the wall by trimming whatever sticks out.
+function clampAlong(p, L) {
+  const x0 = Math.max(0, p.x - p.w / 2), x1 = Math.max(x0, Math.min(L, p.x + p.w / 2));
+  return { ...p, x: (x0 + x1) / 2, w: x1 - x0 };
+}
+
+function trimParts(kind, hole, t) {
   const w = hole.x1 - hole.x0, h = hole.y1 - hole.y0;
   const cx = (hole.x0 + hole.x1) / 2, cy = (hole.y0 + hole.y1) / 2;
   const depth = t + 2 * FRAME_OUT;
@@ -120,6 +130,44 @@ export function plinthFor(wall, levelId) {
   if (levelId !== 'rdc') return null;
   if (wall.material !== 'stone' && wall.material !== 'enclosure') return null;
   return { h: PLINTH_H, out: 0.08 };
+}
+
+/** Runs of plinth along a wall of length L, broken at the holes that reach the floor. */
+export function plinthPieces(L, holes) {
+  const gaps = holes.filter((o) => o.y0 <= 0).sort((p, q) => p.x0 - q.x0);
+  const out = [];
+  let x = 0;
+  for (const g of gaps) {
+    if (g.x0 > x) out.push({ x0: x, x1: g.x0 });
+    x = Math.max(x, g.x1);
+  }
+  if (x < L) out.push({ x0: x, x1: L });
+  return out;
+}
+
+function pointInPolygon([x, z], polygon) {
+  let inside = false;
+  for (let i = 0, j = polygon.length - 1; i < polygon.length; j = i++) {
+    const [xi, zi] = polygon[i], [xj, zj] = polygon[j];
+    if (zi > z !== zj > z && x < ((xj - xi) * (z - zi)) / (zj - zi) + xi) inside = !inside;
+  }
+  return inside;
+}
+
+/**
+ * Which side of a wall faces out, as the sign of the wall-local z axis (+1 = right-hand side of
+ * a→b seen from above). The outer side is the one with no room polygon on it; a wall with rooms on
+ * both sides or none keeps +1.
+ */
+export function outerSide(wall, polygons, probe = 0.3) {
+  const L = wallLength(wall) || 1;
+  const dir = [(wall.b[0] - wall.a[0]) / L, (wall.b[1] - wall.a[1]) / L];
+  const across = [-dir[1], dir[0]];
+  const mid = [(wall.a[0] + wall.b[0]) / 2, (wall.a[1] + wall.b[1]) / 2];
+  const test = (sign) => polygons.some((poly) => pointInPolygon([mid[0] + across[0] * sign * probe, mid[1] + across[1] * sign * probe], poly));
+  const plus = test(1), minus = test(-1);
+  if (plus && !minus) return -1;
+  return 1;
 }
 
 export function wallLength(wall) {
