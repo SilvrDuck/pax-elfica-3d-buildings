@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 import { adoptMaterial, FLOORS } from '../materials.js';
+import { heightRamp } from './ramp.js';
 
 /** One geometry per material group of an indexed geometry (BoxGeometry and friends). */
 export function splitByGroups(geometry) {
@@ -20,7 +21,7 @@ export function splitByGroups(geometry) {
  * Lights and non-mesh objects stay where they are. Materials that came in from glTF models are
  * copied per level so the level can fade on its own.
  */
-export function mergeLevelGroup(group, levelId) {
+export function mergeLevelGroup(group, levelId, { storeyHeight = 3 } = {}) {
   group.updateMatrixWorld(true);
   const toGroup = new THREE.Matrix4().copy(group.matrixWorld).invert();
   const buckets = new Map();
@@ -32,8 +33,18 @@ export function mergeLevelGroup(group, levelId) {
     if (!buckets.has(key)) buckets.set(key, { material, geometries: [], sources: [] });
     const g = geometry.clone().applyMatrix4(local);
     for (const name of Object.keys(g.attributes)) if (!['position', 'normal', 'uv', 'color'].includes(name)) g.deleteAttribute(name);
+    // Palette materials carry the painted value ramp as vertex colours; floors already hold their
+    // baked occlusion there and keep it, emissives stay flat.
+    if (material.userData.palette && !material.vertexColors) { material.vertexColors = true; material.needsUpdate = true; }
     if (material.vertexColors && !g.getAttribute('color')) {
-      g.setAttribute('color', new THREE.BufferAttribute(new Float32Array(g.getAttribute('position').count * 3).fill(1), 3));
+      const pos = g.getAttribute('position');
+      const colors = new Float32Array(pos.count * 3);
+      const flat = Boolean(material.emissive && material.emissive.getHex() > 0);
+      for (let i = 0; i < pos.count; i++) {
+        const k = flat ? 1 : heightRamp(pos.getY(i), storeyHeight);
+        colors.set([k, k, k], i * 3);
+      }
+      g.setAttribute('color', new THREE.BufferAttribute(colors, 3));
     }
     g.morphAttributes = {};
     buckets.get(key).geometries.push(g);

@@ -73,6 +73,7 @@ export function materialFor(name, levelId = 'shared') {
     material.emissiveIntensity = 1.6;
   }
   material.name = key;
+  material.userData.palette = true;
   rememberBase(material);
   cache.set(key, material);
   if (!byLevel.has(levelId)) byLevel.set(levelId, []);

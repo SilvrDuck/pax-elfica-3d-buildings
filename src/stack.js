@@ -73,7 +73,7 @@ export class LevelStack extends EventTarget {
       this.shown.set(roofKey(info.id), true);
     }
     for (const [id, json] of levelsMap) this.build(id, json);
-    for (const [covers, roofs] of this.roofGroups) if (roofs.children.length) mergeLevelGroup(roofs, roofKey(covers));
+    for (const [covers, roofs] of this.roofGroups) if (roofs.children.length) mergeLevelGroup(roofs, roofKey(covers), { storeyHeight: 4 });
   }
 
   build(id, json) {
@@ -113,7 +113,7 @@ export class LevelStack extends EventTarget {
       silo.position.y = -bottom.position.y;
       bottom.add(silo);
     }
-    mergeLevelGroup(group, id);
+    mergeLevelGroup(group, id, { storeyHeight: info.height || 3 });
   }
 
   get selected() {
