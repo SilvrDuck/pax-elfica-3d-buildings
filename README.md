@@ -65,6 +65,16 @@ node tools/grid-view.mjs e1 8 2 10 8 --walls
 
 La seconde commande rend le plan quadrillé avec les murs du modèle par-dessus, dans `verification/`.
 
+Les matières sont des couleurs unies tant que `src/data/textures.json` est vide. Pour en texturer une,
+déposer les images dans `public/textures/` (CC0, avec leur licence dans un `LICENSES.md` à côté) et
+déclarer la matière :
+
+```json
+{ "stone": { "map": "textures/pierre.jpg", "normalMap": "textures/pierre_n.jpg", "metres": 2 } }
+```
+
+`metres` est la taille que couvre une tuile ; les UV des murs, des sols et des toits sont en mètres.
+
 ```sh
 npm test               # géométrie, schéma des niveaux, calibration
 npm run test:legend    # chaque pièce de la légende est présente une fois
