@@ -3,6 +3,7 @@ import { createScene, webglSupported, parseCamera, parseVector } from './scene.j
 import { setWallFloor } from './build/ao.js';
 import { buildSky, setupFog } from './atmosphere.js';
 import { loadTextureCatalog } from './textures.js';
+import { QUALITY, parseQuality, shouldDowngrade } from './quality.js';
 import textureCatalog from './data/textures.json';
 import { setupLighting, fitShadowToBox } from './lighting.js';
 import { materialFor } from './materials.js';
@@ -59,7 +60,28 @@ async function start(container, view, lights) {
   const params = new URLSearchParams(window.location.search);
   // Debug parameters for the art-direction exchanges: `moon=x,y,z` moves the moon,
   // `ao=0.55` sets how dark floors bake at the foot of walls.
-  view.setBloom(params.get('bloom') !== '0');
+  // `quality=low` (or a steady run under 40 fps) turns the two costly passes off.
+  const applyQuality = (level) => {
+    const q = QUALITY[level];
+    view.setBloom(q.bloom && params.get('bloom') !== '0');
+    view.renderer.shadowMap.enabled = q.shadows;
+    lights.moon.castShadow = q.shadows;
+    view.scene.traverse((o) => { if (o.material && !Array.isArray(o.material)) o.material.needsUpdate = true; });
+    return level;
+  };
+  let quality = applyQuality(parseQuality(params.get('quality')));
+  const frameTimes = [];
+  let lastFrame = performance.now();
+  view.onFrame = () => {
+    const now = performance.now();
+    frameTimes.push(now - lastFrame);
+    lastFrame = now;
+    if (frameTimes.length > 120) frameTimes.splice(0, frameTimes.length - 120);
+    if (quality === 'high' && document.hasFocus() && shouldDowngrade(frameTimes)) {
+      quality = applyQuality('low');
+      console.warn('Images par seconde trop basses : ombres et bloom coupés (qualité basse). Forcer avec ?quality=high.');
+    }
+  };
   const moonAt = parseVector(params.get('moon'));
   if (moonAt) lights.moon.position.set(...moonAt);
   if (params.has('ao')) setWallFloor(params.get('ao'));
