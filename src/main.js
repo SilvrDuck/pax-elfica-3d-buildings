@@ -1,6 +1,7 @@
 import './style.css';
 import { createScene, webglSupported, parseCamera, parseVector } from './scene.js';
 import { setWallFloor } from './build/ao.js';
+import { buildSky, setupFog } from './atmosphere.js';
 import { setupLighting, fitShadowToBox } from './lighting.js';
 import { materialFor } from './materials.js';
 import { loadLevels, LEVELS, LEVEL_BY_ID, levelIndex } from './data/levels.js';
@@ -44,6 +45,8 @@ export function mount(container) {
     showFatal(container, CONTEXT_LOST);
   });
   const lights = setupLighting(view.scene);
+  view.scene.add(buildSky());
+  setupFog(view.scene);
   const app = { view, stack: null, ready: null };
   app.ready = start(container, view, lights).then((parts) => Object.assign(app, parts));
   return app;
@@ -53,6 +56,7 @@ async function start(container, view, lights) {
   const params = new URLSearchParams(window.location.search);
   // Debug parameters for the art-direction exchanges: `moon=x,y,z` moves the moon,
   // `ao=0.55` sets how dark floors bake at the foot of walls.
+  view.setBloom(params.get('bloom') !== '0');
   const moonAt = parseVector(params.get('moon'));
   if (moonAt) lights.moon.position.set(...moonAt);
   if (params.has('ao')) setWallFloor(params.get('ao'));

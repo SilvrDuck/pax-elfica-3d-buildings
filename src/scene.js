@@ -1,6 +1,11 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { CSS2DRenderer } from 'three/addons/renderers/CSS2DRenderer.js';
+import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
+import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
+import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
+import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
+import { BLOOM } from './atmosphere.js';
 
 export const HOME = {
   position: new THREE.Vector3(60, 45, 70),
@@ -32,7 +37,7 @@ export function topFrustum([, , w, h], aspect, margin = 1) {
 }
 
 /** Keeps the WebGL canvas, the label layer and the camera in step with the window. */
-export function applySize({ camera, renderer, labelRenderer }, width, height) {
+export function applySize({ camera, renderer, labelRenderer, composer = null }, width, height) {
   if (camera.isOrthographicCamera && camera.userData.topFrame) {
     const { rect, margin } = camera.userData.topFrame;
     Object.assign(camera, topFrustum(rect, width / height, margin));
@@ -42,6 +47,7 @@ export function applySize({ camera, renderer, labelRenderer }, width, height) {
   camera.updateProjectionMatrix();
   renderer.setSize(width, height);
   labelRenderer.setSize(width, height);
+  composer?.setSize(width, height);
 }
 
 /** Three comma-separated numbers from a URL parameter, or null. */
@@ -109,8 +115,9 @@ export function createScene(container, { width = window.innerWidth, height = win
   controls.target.copy(HOME.target);
   controls.saveState();
 
+  // The ground runs well past the fog's far plane so its edge never shows.
   const ground = new THREE.Mesh(
-    new THREE.PlaneGeometry(200, 200),
+    new THREE.PlaneGeometry(600, 600),
     new THREE.MeshStandardMaterial({ color: '#8a6b45' }),
   );
   ground.rotation.x = -Math.PI / 2;
@@ -119,6 +126,16 @@ export function createScene(container, { width = window.innerWidth, height = win
   scene.add(ground);
 
   const view = { scene, camera, perspective: camera, renderer, labelRenderer, controls, ground, setTopView, home: (box) => goHome(view, box) };
+
+  /** Turns the bloom pass on (emissives only) or off; the camera swap of the top view is followed. */
+  view.setBloom = (on) => {
+    if (!on) { view.composer = null; return; }
+    const composer = new EffectComposer(renderer);
+    composer.addPass(new RenderPass(scene, view.camera));
+    composer.addPass(new UnrealBloomPass(new THREE.Vector2(width, height), BLOOM.strength, BLOOM.radius, BLOOM.threshold));
+    composer.addPass(new OutputPass());
+    view.composer = composer;
+  };
 
   // Eased camera move; a second call cancels the first.
   let flight = 0;
@@ -135,7 +152,7 @@ export function createScene(container, { width = window.innerWidth, height = win
     };
     flight = requestAnimationFrame(step);
   };
-  view.resize = (w = window.innerWidth, h = window.innerHeight) => applySize({ camera: view.camera, renderer, labelRenderer }, w, h);
+  view.resize = (w = window.innerWidth, h = window.innerHeight) => applySize({ camera: view.camera, renderer, labelRenderer, composer: view.composer }, w, h);
   window.addEventListener('resize', () => view.resize());
 
   /** Straight-down orthographic framing of a world rect [x0, z0, w, h], north up; orbit disabled. */
@@ -156,7 +173,13 @@ export function createScene(container, { width = window.innerWidth, height = win
 
   function render() {
     if (controls.enabled) controls.update();
-    renderer.render(scene, view.camera);
+    const composer = view.composer;
+    if (composer) {
+      composer.passes[0].camera = view.camera;
+      composer.render();
+    } else {
+      renderer.render(scene, view.camera);
+    }
     labelRenderer.render(scene, view.camera);
   }
   renderer.setAnimationLoop(render);
