@@ -11,7 +11,7 @@ export const PALETTE = {
   dirt: '#8a6b45',
   flagstone: '#7d7b74',
   cobbles: '#6f7f78',
-  water: '#3d6b74',
+  water: '#1f3a44',
   tile: '#8e4a34',
   thatch: '#b89b5a',
   slate: '#4e5560',
@@ -69,6 +69,12 @@ export function materialFor(name, levelId = 'shared') {
     side: THREE.DoubleSide,
     vertexColors: FLOORS.has(name),
   });
+  if (name === 'water') {
+    // Dark and glossy: the moon and the lanterns glint on it.
+    material.flatShading = false;
+    material.roughness = 0.18;
+    material.metalness = 0.25;
+  }
   if (name === 'windowGlow' || name === 'ember') {
     material.emissive = new THREE.Color(color);
     material.emissiveIntensity = name === 'ember' ? 1.3 : 1.6;
