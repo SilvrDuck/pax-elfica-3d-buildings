@@ -19,10 +19,14 @@ const COARSE_ABOVE_M2 = 150;
 
 const FADE_MS = 300;
 
-/** Which levels and which roofs (by the storey they cover) are shown for a selection. */
+/**
+ * Which levels and which roofs (by the storey they cover) are shown for a selection. The silo
+ * levels sit under the ground slab, so they only show while a silo level is selected.
+ */
 export function visibleSet(selectedId) {
   const sel = levelIndex(selectedId);
-  const levels = new Set(LEVELS.filter((_, i) => i <= sel).map((l) => l.id));
+  const ground = levelIndex('rdc');
+  const levels = new Set(LEVELS.filter((_, i) => i <= sel && (sel < ground || i >= ground)).map((l) => l.id));
   const roofsCovering = new Set(LEVELS.filter((l) => levelIndex(l.id) < sel).map((l) => l.id));
   return { levels, roofsCovering };
 }

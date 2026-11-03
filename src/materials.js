@@ -87,6 +87,14 @@ export function levelMaterials(levelId) {
 
 const adopted = new Map();
 
+// Models from one pack share an atlas but each carries its own material instance; what the GPU
+// cares about is the texture, the colours and the blend state, so that is the identity used.
+function signature(m) {
+  const tex = (t) => (t ? t.uuid : '-');
+  return [m.type, tex(m.map), tex(m.emissiveMap), tex(m.normalMap), m.color?.getHex() ?? '-', m.emissive?.getHex() ?? '-',
+    m.emissiveIntensity ?? '-', m.roughness ?? '-', m.metalness ?? '-', m.transparent ? 1 : 0, m.side, m.vertexColors ? 1 : 0].join('|');
+}
+
 /**
  * Returns this level's copy of a material that came from elsewhere (a glTF model): one clone per
  * (source, level), transparent so the level fade can drive it. Materials made by `materialFor`
@@ -94,7 +102,7 @@ const adopted = new Map();
  */
 export function adoptMaterial(material, levelId) {
   if (cache.get(material.name) === material) return material;
-  const key = `${material.uuid}|${levelId}`;
+  const key = `${signature(material)}|${levelId}`;
   if (adopted.has(key)) return adopted.get(key);
   const copy = material.clone();
   copy.transparent = true;
