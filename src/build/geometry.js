@@ -54,6 +54,42 @@ export function openingTrim(kind, hole, t) {
   return [];
 }
 
+/** Half-timbering: post spacing and beam section, in metres. */
+export const POST_SPACING = 1.3;
+const BEAM_W = 0.16;
+const BEAM_OUT = 0.04;
+
+/**
+ * Beams of a half-timbered wall of length `L`, storey height `h` and thickness `t`, in wall-local
+ * coordinates like `openingTrim`: a sill and a plate the full length, posts at the ends and every
+ * POST_SPACING (skipping any that would cross an opening), and a diagonal brace in each bay that
+ * has no opening. Each is { name, w, h, d, x, y, z, roll }.
+ */
+export function framingFor({ L, h, t }, holes) {
+  const d = t + 2 * BEAM_OUT;
+  const beams = [
+    { name: 'sill', w: L, h: BEAM_W, d, x: L / 2, y: BEAM_W / 2, z: 0, roll: 0 },
+    { name: 'plate', w: L, h: BEAM_W, d, x: L / 2, y: h - BEAM_W / 2, z: 0, roll: 0 },
+  ];
+  const crosses = (x) => holes.some((o) => x > o.x0 - BEAM_W && x < o.x1 + BEAM_W);
+  const n = Math.max(1, Math.round(L / POST_SPACING));
+  const xs = [];
+  for (let i = 0; i <= n; i++) {
+    const x = Math.min(L - BEAM_W / 2, Math.max(BEAM_W / 2, (i * L) / n));
+    if (!crosses(x)) xs.push(x);
+  }
+  for (const x of xs) beams.push({ name: 'post', w: BEAM_W, h: h - 2 * BEAM_W, d, x, y: h / 2, z: 0, roll: 0 });
+  for (let i = 0; i + 1 < xs.length; i++) {
+    const x0 = xs[i], x1 = xs[i + 1];
+    const bay = x1 - x0;
+    if (bay < 0.9 || holes.some((o) => o.x1 > x0 && o.x0 < x1)) continue;
+    const inner = h - 2 * BEAM_W;
+    const len = Math.hypot(bay - BEAM_W, inner) * 0.92;
+    beams.push({ name: 'brace', w: BEAM_W * 0.8, h: len, d: d - 0.01, x: (x0 + x1) / 2, y: h / 2, z: 0, roll: Math.atan2(bay - BEAM_W, inner) * (i % 2 ? -1 : 1) });
+  }
+  return beams;
+}
+
 /** Ground-floor stone and enclosure walls stand on a protruding base band. */
 export function plinthFor(wall, levelId) {
   if (levelId !== 'rdc') return null;

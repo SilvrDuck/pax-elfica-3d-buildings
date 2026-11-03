@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { splitWall, THICKNESS, wallLength, openingTrim, plinthFor } from './geometry.js';
+import { splitWall, THICKNESS, wallLength, openingTrim, plinthFor, framingFor } from './geometry.js';
 
 const DOOR_LEAF_T = 0.05;
 const DOOR_OPEN_DEG = 15;
@@ -19,7 +19,9 @@ export function buildWall(wall, openings, levelInfo, matFor) {
   const t = THICKNESS[wall.material] ?? THICKNESS.stone;
   const { pieces, holes, warnings } = splitWall(wall, openings, levelInfo.height);
   for (const w of warnings) console.warn(w);
-  const side = matFor(wall.material, levelInfo.id);
+  // Timber walls show as cob panels between dark beams; the beams come after the panels.
+  const framed = wall.material === 'timber';
+  const side = matFor(framed ? 'cob' : wall.material, levelInfo.id);
   const cap = matFor('cut', levelInfo.id);
   // BoxGeometry groups: +x, -x, +y (top), -y, +z, -z. The top reads as the cut through the storey.
   const material = [side, side, cap, side, side, side];
@@ -40,6 +42,16 @@ export function buildWall(wall, openings, levelInfo, matFor) {
   for (const p of pieces) {
     const mesh = new THREE.Mesh(new THREE.BoxGeometry(p.x1 - p.x0, p.y1 - p.y0, t), material);
     place(mesh, (p.x0 + p.x1) / 2, (p.y0 + p.y1) / 2);
+  }
+  if (framed) {
+    const h = wall.h ?? levelInfo.height;
+    for (const b of framingFor({ L, h, t }, holes)) {
+      const beam = new THREE.Mesh(new THREE.BoxGeometry(b.w, b.h, b.d), matFor('timber', levelInfo.id));
+      beam.name = b.name;
+      beam.rotation.z = b.roll;
+      place(beam, b.x, b.y, b.z);
+      if (b.roll) beam.rotation.set(0, yaw, b.roll);
+    }
   }
   for (const o of openings) {
     const hole = holes.find((h) => o.at >= h.x0 - 1e-6 && o.at <= h.x1 + 1e-6);
