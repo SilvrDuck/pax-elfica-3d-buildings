@@ -70,6 +70,9 @@ export function validateLevel(level) {
     if (!ROOF_MATERIALS.includes(r.material)) err(`roofs[${i}] : matériau « ${r.material} » hors de ${ROOF_MATERIALS.join('|')}`);
     if (!LEVEL_BY_ID.has(r.covers)) err(`roofs[${i}] : covers inconnu « ${r.covers} »`);
   });
+  (level.chimneys ?? []).forEach((c, i) => {
+    if (![c.x, c.z, c.base, c.top, c.w].every(Number.isFinite) || !(c.top > c.base) || !(c.w > 0)) err(`chimneys[${i}] : x, z, base, top (> base) et w (> 0) doivent être des nombres`);
+  });
   if (level.silo !== undefined) {
     const s = level.silo;
     if (!isPoint(s.centre) || !(s.radius > 0) || !(s.depth > 0)) err('silo doit avoir centre [x, z], radius et depth');
