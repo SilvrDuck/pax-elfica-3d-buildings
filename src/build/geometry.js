@@ -12,6 +12,55 @@ export const OPENING_HEIGHTS = {
 
 const r4 = (v) => Math.round(v * 1e4) / 1e4;
 
+/** Trim sizes, in metres: frame bar, sill overhang, plinth height. */
+export const FRAME_T = 0.1;
+export const SILL_OUT = 0.12;
+export const PLINTH_H = 0.45;
+const FRAME_OUT = 0.05;
+const LINTEL_H = 0.18;
+const THRESHOLD_H = 0.06;
+const JAMB_W = 0.12;
+const MULLION_T = 0.06;
+
+/**
+ * Boxes that dress an opening, in wall-local coordinates: x along the wall, y up from the floor,
+ * z across the wall (positive = outer face). Each is { name, material, w, h, d, x, y, z }.
+ */
+export function openingTrim(kind, hole, t) {
+  const w = hole.x1 - hole.x0, h = hole.y1 - hole.y0;
+  const cx = (hole.x0 + hole.x1) / 2, cy = (hole.y0 + hole.y1) / 2;
+  const depth = t + 2 * FRAME_OUT;
+  if (kind === 'window') {
+    return [
+      { name: 'frame', material: 'timber', w: w + 2 * FRAME_T, h: FRAME_T, d: depth, x: cx, y: hole.y1 + FRAME_T / 2, z: 0 },
+      { name: 'frame', material: 'timber', w: FRAME_T, h: h, d: depth, x: hole.x0 - FRAME_T / 2, y: cy, z: 0 },
+      { name: 'frame', material: 'timber', w: FRAME_T, h: h, d: depth, x: hole.x1 + FRAME_T / 2, y: cy, z: 0 },
+      { name: 'sill', material: 'stone', w: w + 2 * FRAME_T + 0.1, h: 0.08, d: t + SILL_OUT, x: cx, y: hole.y0 - 0.04, z: SILL_OUT / 2 },
+      { name: 'mullion', material: 'timber', w: MULLION_T, h: h, d: MULLION_T, x: cx, y: cy, z: 0 },
+      { name: 'mullion', material: 'timber', w: w, h: MULLION_T, d: MULLION_T, x: cx, y: hole.y0 + h * 0.62, z: 0 },
+    ];
+  }
+  if (kind === 'door') {
+    return [
+      { name: 'lintel', material: 'timber', w: w + 2 * JAMB_W + 0.1, h: LINTEL_H, d: depth, x: cx, y: hole.y1 + LINTEL_H / 2, z: 0 },
+      { name: 'jamb', material: 'timber', w: JAMB_W, h: h, d: depth, x: hole.x0 - JAMB_W / 2, y: cy, z: 0 },
+      { name: 'jamb', material: 'timber', w: JAMB_W, h: h, d: depth, x: hole.x1 + JAMB_W / 2, y: cy, z: 0 },
+      { name: 'threshold', material: 'stone', w: w + 2 * JAMB_W, h: THRESHOLD_H, d: t + SILL_OUT, x: cx, y: THRESHOLD_H / 2, z: SILL_OUT / 2 },
+    ];
+  }
+  if (kind === 'arch') {
+    return [{ name: 'lintel', material: 'stone', w: w + 0.6, h: LINTEL_H * 1.5, d: depth, x: cx, y: hole.y1 + LINTEL_H * 0.75, z: 0 }];
+  }
+  return [];
+}
+
+/** Ground-floor stone and enclosure walls stand on a protruding base band. */
+export function plinthFor(wall, levelId) {
+  if (levelId !== 'rdc') return null;
+  if (wall.material !== 'stone' && wall.material !== 'enclosure') return null;
+  return { h: PLINTH_H, out: 0.08 };
+}
+
 export function wallLength(wall) {
   return Math.hypot(wall.b[0] - wall.a[0], wall.b[1] - wall.a[1]);
 }

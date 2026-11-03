@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { splitWall, THICKNESS, wallLength } from './geometry.js';
+import { splitWall, THICKNESS, wallLength, openingTrim, plinthFor } from './geometry.js';
 
 const DOOR_LEAF_T = 0.05;
 const DOOR_OPEN_DEG = 15;
@@ -23,11 +23,20 @@ export function buildWall(wall, openings, levelInfo, matFor) {
   const cap = matFor('cut', levelInfo.id);
   // BoxGeometry groups: +x, -x, +y (top), -y, +z, -z. The top reads as the cut through the storey.
   const material = [side, side, cap, side, side, side];
-  const place = (mesh, along, y) => {
-    mesh.position.set(wall.a[0] + dir[0] * along, y, wall.a[1] + dir[1] * along);
+  // Across the wall: +z in wall-local space is the right-hand side of a→b, the outer face by
+  // convention of the level scripts (enclosure and facade walls run clockwise seen from above).
+  const across = [-dir[1], dir[0]];
+  const place = (mesh, along, y, out = 0) => {
+    mesh.position.set(wall.a[0] + dir[0] * along + across[0] * out, y, wall.a[1] + dir[1] * along + across[1] * out);
     mesh.rotation.y = yaw;
     group.add(mesh);
   };
+  const plinth = plinthFor(wall, levelInfo.id);
+  if (plinth) {
+    const base = new THREE.Mesh(new THREE.BoxGeometry(L, plinth.h, t + 2 * plinth.out), matFor('plinth', levelInfo.id));
+    base.name = 'plinth';
+    place(base, L / 2, plinth.h / 2);
+  }
   for (const p of pieces) {
     const mesh = new THREE.Mesh(new THREE.BoxGeometry(p.x1 - p.x0, p.y1 - p.y0, t), material);
     place(mesh, (p.x0 + p.x1) / 2, (p.y0 + p.y1) / 2);
@@ -37,6 +46,11 @@ export function buildWall(wall, openings, levelInfo, matFor) {
     if (!hole) continue;
     const width = Math.min(o.width, hole.x1 - hole.x0);
     const x0 = Math.max(hole.x0, o.at - o.width / 2);
+    for (const part of openingTrim(o.kind, { x0, x1: x0 + width, y0: hole.y0, y1: hole.y1 }, t)) {
+      const mesh = new THREE.Mesh(new THREE.BoxGeometry(part.w, part.h, part.d), matFor(part.material, levelInfo.id));
+      mesh.name = part.name;
+      place(mesh, part.x, part.y, part.z);
+    }
     if (o.kind === 'door') {
       const leaf = new THREE.Mesh(new THREE.BoxGeometry(width, hole.y1 - 0.05, DOOR_LEAF_T), matFor('timber', levelInfo.id));
       leaf.position.x = width / 2;

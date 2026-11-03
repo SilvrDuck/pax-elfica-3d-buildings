@@ -58,8 +58,8 @@ describe('LevelStack roles', () => {
 describe('cut cap', () => {
   it('gives wall boxes a dark top face', () => {
     const group = buildWall({ id: 'w1', a: [0, 0], b: [4, 0], material: 'stone' }, [], { id: 'rdc', height: 3 }, matFor);
-    const box = group.children.find((c) => c.isMesh);
-    expect(Array.isArray(box.material)).toBe(true);
+    const box = group.children.find((c) => c.isMesh && Array.isArray(c.material));
+    expect(box).toBeDefined();
     expect(box.material[2]).toBe(materialFor('cut', 'rdc'));
     expect(box.material[0]).toBe(materialFor('stone', 'rdc'));
   });
