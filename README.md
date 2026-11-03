@@ -27,6 +27,8 @@ dans le livre de base (pages 40 à 42) sont toutes là.
 
 Une adresse peut ouvrir la maquette dans un état donné, par exemple
 `?level=e1&labels=1`, `?level=rdc&view=top` pour une vue d'en haut, ou `cam=x,y,z,tx,ty,tz` (position de la caméra et point visé, en mètres) pour reproduire un cadrage.
+`quality=low` coupe les ombres et le bloom pour un portable faible ; la maquette y passe d'elle-même si
+elle tourne sous 40 images par seconde, `quality=high` l'en empêche.
 
 ## Lancer chez soi
 

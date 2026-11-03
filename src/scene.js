@@ -175,6 +175,7 @@ export function createScene(container, { width = window.innerWidth, height = win
   renderer.info.autoReset = false;
   function render() {
     renderer.info.reset();
+    view.onFrame?.();
     if (controls.enabled) controls.update();
     const composer = view.composer;
     if (composer) {
