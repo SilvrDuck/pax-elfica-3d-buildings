@@ -3,6 +3,8 @@ import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 import { adoptMaterial, FLOORS } from '../materials.js';
 import { heightRamp } from './ramp.js';
 
+const NO_CAST = new Set([...FLOORS, 'cut', 'windowGlow', 'ember']);
+
 /** One geometry per material group of an indexed geometry (BoxGeometry and friends). */
 export function splitByGroups(geometry) {
   if (!geometry.index || !geometry.groups.length) return [{ materialIndex: 0, geometry }];
@@ -78,8 +80,9 @@ export function mergeLevelGroup(group, levelId, { storeyHeight = 3 } = {}) {
         continue;
       }
       const mesh = new THREE.Mesh(merged, material);
-      // Floors only receive: they never shade anything and would double the shadow pass.
-      mesh.castShadow = !FLOORS.has(material.name.split('|')[0]);
+      // Floors, cut caps, panes and embers only receive: their shadows would never be seen and
+      // each caster costs a draw in the shadow pass.
+      mesh.castShadow = !NO_CAST.has(material.name.split('|')[0]);
       mesh.receiveShadow = true;
       group.add(mesh);
     }

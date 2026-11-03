@@ -64,3 +64,18 @@ describe('adoptMaterial', () => {
     expect(adoptMaterial(a, 'sig-test')).not.toBe(adoptMaterial(a, 'sig-other'));
   });
 });
+
+describe('shadow casters', () => {
+  it('does not let cut caps, panes or embers cast shadows', async () => {
+    const { materialFor } = await import('../src/materials.js');
+    const g = new Group();
+    g.add(new Mesh(new BoxGeometry(1, 1, 1), materialFor('cut', 'cast-test')));
+    g.add(new Mesh(new BoxGeometry(1, 1, 1), materialFor('windowGlow', 'cast-test')));
+    g.add(new Mesh(new BoxGeometry(1, 1, 1), materialFor('stone', 'cast-test')));
+    mergeLevelGroup(g, 'cast-test');
+    const by = Object.fromEntries(g.children.filter((o) => o.isMesh).map((m) => [m.material.name.split('|')[0], m.castShadow]));
+    expect(by.cut).toBe(false);
+    expect(by.windowGlow).toBe(false);
+    expect(by.stone).toBe(true);
+  });
+});
