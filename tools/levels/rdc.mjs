@@ -154,7 +154,7 @@ L.stair('straight', [11.7, 14.3], [13.0, 14.3], 0.9, 'e1'); // up to the germoir
 L.light([4.3, 7.4], 1.8, 'lantern'); // tower vestibule
 L.light([13.55, 3.4], 1.0, 'hearth'); // ovens
 L.light([14.45, 3.4], 1.0, 'hearth');
-L.light([22.1, 4.6], 1.2, 'hearth'); // forge
+L.light([22.1, 4.6], 1.7, 'lantern'); // forge
 L.light([12.2, 7.0], 1.9, 'candle');
 L.light([9.5, 6.5], 1.9, 'candle');
 L.light([3.0, 3.8], 1.6, 'candle');
