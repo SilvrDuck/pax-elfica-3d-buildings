@@ -87,6 +87,12 @@ export class Level {
     this.json.lights.push({ x, y, z, kind });
   }
 
+  /** Chimney stack at a cell point; `base` and `top` are metres relative to the level floor. */
+  chimney(at, base, top, w = 0.6) {
+    const [x, z] = pt(at);
+    (this.json.chimneys ??= []).push({ x, z, base, top, w });
+  }
+
   /** Roof over a cell rect [col, row, cols, rows]. */
   roof([c, r, cw, rh], ridge, pitch, material, covers) {
     const [x, z] = pt([c, r]);
