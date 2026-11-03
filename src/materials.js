@@ -19,6 +19,7 @@ export const PALETTE = {
   gold: '#c9a227',
   silver: '#c8ccd4',
   cut: '#1c1a1f',
+  plinth: '#4f5258',
 };
 
 /** A level that is not the active one recedes: same hue, less saturation, less light. */
