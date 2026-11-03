@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { splitWall, THICKNESS, wallLength, openingTrim, plinthFor, framingFor, metreUVs } from './geometry.js';
+import { splitWall, THICKNESS, wallLength, openingTrim, plinthFor, plinthPieces, framingFor, metreUVs, outerSide } from './geometry.js';
 
 const DOOR_LEAF_T = 0.05;
 const DOOR_OPEN_DEG = 15;
@@ -8,7 +8,7 @@ const DOOR_OPEN_DEG = 15;
  * Builds one wall as a group of boxes around its openings, with door leaves ajar and glowing panes
  * in windows flagged `glow`. Coordinates are level-local (y from the storey floor).
  */
-export function buildWall(wall, openings, levelInfo, matFor) {
+export function buildWall(wall, openings, levelInfo, matFor, { rooms = [] } = {}) {
   const group = new THREE.Group();
   group.name = wall.id;
   group.position.y = wall.base ?? 0;
@@ -25,19 +25,23 @@ export function buildWall(wall, openings, levelInfo, matFor) {
   const cap = matFor('cut', levelInfo.id);
   // BoxGeometry groups: +x, -x, +y (top), -y, +z, -z. The top reads as the cut through the storey.
   const material = [side, side, cap, side, side, side];
-  // Across the wall: +z in wall-local space is the right-hand side of a→b, the outer face by
-  // convention of the level scripts (enclosure and facade walls run clockwise seen from above).
+  // Across the wall: +z in wall-local space is the right-hand side of a→b; the outer face is the
+  // side with no room on it, so sills and thresholds go there whichever way the wall is drawn.
   const across = [-dir[1], dir[0]];
+  const outer = outerSide(wall, rooms);
   const place = (mesh, along, y, out = 0) => {
-    mesh.position.set(wall.a[0] + dir[0] * along + across[0] * out, y, wall.a[1] + dir[1] * along + across[1] * out);
+    const o = out * outer;
+    mesh.position.set(wall.a[0] + dir[0] * along + across[0] * o, y, wall.a[1] + dir[1] * along + across[1] * o);
     mesh.rotation.y = yaw;
     group.add(mesh);
   };
   const plinth = plinthFor(wall, levelInfo.id);
   if (plinth) {
-    const base = new THREE.Mesh(new THREE.BoxGeometry(L, plinth.h, t + 2 * plinth.out), matFor('plinth', levelInfo.id));
-    base.name = 'plinth';
-    place(base, L / 2, plinth.h / 2);
+    for (const run of plinthPieces(L, holes)) {
+      const base = new THREE.Mesh(new THREE.BoxGeometry(run.x1 - run.x0, plinth.h, t + 2 * plinth.out), matFor('plinth', levelInfo.id));
+      base.name = 'plinth';
+      place(base, (run.x0 + run.x1) / 2, plinth.h / 2);
+    }
   }
   for (const p of pieces) {
     const mesh = new THREE.Mesh(metreUVs(new THREE.BoxGeometry(p.x1 - p.x0, p.y1 - p.y0, t)), material);
@@ -58,7 +62,8 @@ export function buildWall(wall, openings, levelInfo, matFor) {
     if (!hole) continue;
     const width = Math.min(o.width, hole.x1 - hole.x0);
     const x0 = Math.max(hole.x0, o.at - o.width / 2);
-    for (const part of openingTrim(o.kind, { x0, x1: x0 + width, y0: hole.y0, y1: hole.y1 }, t)) {
+    for (const part of openingTrim(o.kind, { x0, x1: x0 + width, y0: hole.y0, y1: hole.y1 }, t, L)) {
+      if (part.w <= 0) continue;
       const mesh = new THREE.Mesh(new THREE.BoxGeometry(part.w, part.h, part.d), matFor(part.material, levelInfo.id));
       mesh.name = part.name;
       place(mesh, part.x, part.y, part.z);

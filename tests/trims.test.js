@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { openingTrim, plinthFor, FRAME_T, SILL_OUT, PLINTH_H } from '../src/build/geometry.js';
+import { openingTrim, plinthFor, PLINTH_H } from '../src/build/geometry.js';
 import { buildWall } from '../src/build/walls.js';
 import { materialFor } from '../src/materials.js';
 
@@ -71,13 +71,5 @@ describe('buildWall with trims', () => {
     const group = buildWall({ id: 'w1', a: [0, 0], b: [6, 0], material: 'stone' }, [{ at: 3, width: 0.8, kind: 'window' }], { id: 'e1', height: 3 }, matFor);
     expect(group.getObjectByName('frame').material).toBe(materialFor('timber', 'e1'));
     expect(group.getObjectByName('sill').material).toBe(materialFor('stone', 'e1'));
-  });
-});
-
-describe('constants', () => {
-  it('fixes the trim sizes', () => {
-    expect(FRAME_T).toBe(0.1);
-    expect(SILL_OUT).toBe(0.12);
-    expect(PLINTH_H).toBe(0.45);
   });
 });

@@ -82,7 +82,8 @@ export class LevelStack extends EventTarget {
     if (!info || !group) return;
     const openingsByWall = new Map();
     for (const o of json.openings ?? []) openingsByWall.set(o.wall, [...(openingsByWall.get(o.wall) ?? []), o]);
-    for (const wall of json.walls ?? []) group.add(buildWall(wall, openingsByWall.get(wall.id) ?? [], info, this.matFor));
+    const rooms = [...(json.rooms ?? []).map((r) => r.polygon), ...(json.floors ?? []).filter((f) => f.material !== 'dirt' && f.material !== 'cobbles' && f.material !== 'water').map((f) => f.polygon)];
+    for (const wall of json.walls ?? []) group.add(buildWall(wall, openingsByWall.get(wall.id) ?? [], info, this.matFor, { rooms }));
     const occluders = {
       walls: json.walls ?? [],
       props: (json.props ?? []).map((p) => ({ x: p.x, z: p.z, footprint: this.propLibrary?.catalog?.[p.asset]?.footprint })),
