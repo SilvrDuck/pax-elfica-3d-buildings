@@ -90,6 +90,31 @@ export function framingFor({ L, h, t }, holes) {
   return beams;
 }
 
+/**
+ * Rescales a BoxGeometry's UVs so one texture unit is one metre on every face: a tiling map
+ * declared "per metre" then reads at the same size on a 6 m wall and a 0.5 m post. Returns the
+ * geometry.
+ */
+export function metreUVs(geometry) {
+  const { width = 1, height = 1, depth = 1 } = geometry.parameters ?? {};
+  // BoxGeometry face order: +x, -x, +y, -y, +z, -z; the (u, v) extents of each face in metres.
+  const extents = [[depth, height], [depth, height], [width, depth], [width, depth], [width, height], [width, height]];
+  const uv = geometry.getAttribute('uv');
+  const index = geometry.index;
+  const done = new Set();
+  geometry.groups.forEach((g, face) => {
+    const [su, sv] = extents[face];
+    for (let i = g.start; i < g.start + g.count; i++) {
+      const v = index.array[i];
+      if (done.has(v)) continue;
+      done.add(v);
+      uv.setXY(v, uv.getX(v) * su, uv.getY(v) * sv);
+    }
+  });
+  uv.needsUpdate = true;
+  return geometry;
+}
+
 /** Ground-floor stone and enclosure walls stand on a protruding base band. */
 export function plinthFor(wall, levelId) {
   if (levelId !== 'rdc') return null;

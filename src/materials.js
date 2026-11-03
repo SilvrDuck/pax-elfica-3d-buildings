@@ -48,6 +48,34 @@ function rememberBase(material) {
 /** Floor materials carry the baked contact occlusion as vertex colours. */
 export const FLOORS = new Set(['planks', 'dirt', 'flagstone', 'cobbles', 'water', 'thatch']);
 
+/**
+ * Optional textures per material name: { map, normalMap, metres }, where `metres` is the size one
+ * tile of the texture covers (UVs are in metres on walls and floors). Empty by default, so the
+ * look is flat colour until a map is declared with `setMaterialMaps`.
+ */
+export const MATERIAL_MAPS = {};
+
+/** Declares (or replaces) the maps of a material name; every existing level copy follows. */
+export function setMaterialMaps(name, { map = null, normalMap = null, metres = 1 } = {}) {
+  for (const tex of [map, normalMap]) {
+    if (!tex) continue;
+    tex.wrapS = THREE.RepeatWrapping;
+    tex.wrapT = THREE.RepeatWrapping;
+    tex.repeat.set(1 / metres, 1 / metres);
+  }
+  if (map) map.colorSpace = THREE.SRGBColorSpace;
+  MATERIAL_MAPS[name] = { map, normalMap, metres };
+  for (const [key, material] of cache) if (key.startsWith(`${name}|`)) applyMaps(material, name);
+}
+
+function applyMaps(material, name) {
+  const maps = MATERIAL_MAPS[name];
+  if (!maps) return;
+  material.map = maps.map;
+  material.normalMap = maps.normalMap;
+  material.needsUpdate = true;
+}
+
 const cache = new Map();
 const byLevel = new Map();
 
@@ -81,6 +109,7 @@ export function materialFor(name, levelId = 'shared') {
   }
   material.name = key;
   material.userData.palette = true;
+  applyMaps(material, name);
   rememberBase(material);
   cache.set(key, material);
   if (!byLevel.has(levelId)) byLevel.set(levelId, []);

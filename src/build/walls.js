@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { splitWall, THICKNESS, wallLength, openingTrim, plinthFor, framingFor } from './geometry.js';
+import { splitWall, THICKNESS, wallLength, openingTrim, plinthFor, framingFor, metreUVs } from './geometry.js';
 
 const DOOR_LEAF_T = 0.05;
 const DOOR_OPEN_DEG = 15;
@@ -40,7 +40,7 @@ export function buildWall(wall, openings, levelInfo, matFor) {
     place(base, L / 2, plinth.h / 2);
   }
   for (const p of pieces) {
-    const mesh = new THREE.Mesh(new THREE.BoxGeometry(p.x1 - p.x0, p.y1 - p.y0, t), material);
+    const mesh = new THREE.Mesh(metreUVs(new THREE.BoxGeometry(p.x1 - p.x0, p.y1 - p.y0, t)), material);
     place(mesh, (p.x0 + p.x1) / 2, (p.y0 + p.y1) / 2);
   }
   if (framed) {
