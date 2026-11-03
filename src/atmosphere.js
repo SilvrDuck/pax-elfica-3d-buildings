@@ -67,7 +67,7 @@ export function buildSky() {
 }
 
 /** Bloom kept to the emissives: panes, embers, lantern glass. */
-export const BLOOM = { strength: 0.35, radius: 0.4, threshold: 0.9 };
+export const BLOOM = { strength: 0.3, radius: 0.4, threshold: 1.15 };
 
 /** Linear fog in the horizon colour: the ground plane dissolves instead of ending. */
 export function setupFog(scene) {

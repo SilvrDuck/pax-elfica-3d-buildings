@@ -20,6 +20,7 @@ export const PALETTE = {
   silver: '#c8ccd4',
   cut: '#1c1a1f',
   plinth: '#4f5258',
+  ember: '#ff6a1a',
 };
 
 /** A level that is not the active one recedes: same hue, less saturation, less light. */
@@ -68,9 +69,9 @@ export function materialFor(name, levelId = 'shared') {
     side: THREE.DoubleSide,
     vertexColors: FLOORS.has(name),
   });
-  if (name === 'windowGlow') {
+  if (name === 'windowGlow' || name === 'ember') {
     material.emissive = new THREE.Color(color);
-    material.emissiveIntensity = 1.6;
+    material.emissiveIntensity = name === 'ember' ? 2.2 : 1.6;
   }
   material.name = key;
   material.userData.palette = true;

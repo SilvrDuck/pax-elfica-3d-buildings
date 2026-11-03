@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+import { buildFixture } from './build/fixtures.js';
 
 /** Plan symbols every level may place; each needs an entry in src/data/props.json. */
 export const REQUIRED_PROPS = [
@@ -34,7 +35,7 @@ export class PropLibrary {
     const files = new Map();
     const pending = [];
     for (const [id, entry] of Object.entries(catalog)) {
-      if (entry.pack === 'primitive' || !entry.file) continue;
+      if (entry.pack === 'primitive' || entry.pack === 'fixture' || !entry.file) continue;
       const url = `${baseUrl}assets/${entry.pack}/${entry.file}`;
       if (!files.has(url)) {
         files.set(url, loader(url).catch((err) => {
@@ -73,6 +74,11 @@ export class PropLibrary {
       object.add(inner);
       object.position.set(prop.x, 0, prop.z);
       object.rotation.y = yaw + ((entry.yaw ?? 0) * Math.PI) / 180;
+    } else if (entry.pack === 'fixture') {
+      const k = prop.scale ?? 1;
+      object = buildFixture(prop.asset, { footprint: entry.footprint.map((v) => v * k), height: (entry.height ?? 1) * k }, (name) => this.matFor(name, levelInfo.id));
+      object.position.set(prop.x, 0, prop.z);
+      object.rotation.y = yaw;
     } else {
       const k = prop.scale ?? 1;
       const [w, d] = entry.footprint.map((v) => v * k);
