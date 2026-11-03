@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { projectUV, SURFACE_STYLE } from '../surfaces.js';
 
 const SLAB_M = 0.15;
 const RAISED = new Set(['planks']);
@@ -21,6 +22,8 @@ export function buildFloor(floor, levelInfo, matFor) {
     : new THREE.ShapeGeometry(shape);
   // Shape (u, v) → world (x, z); the extrusion runs down from the floor.
   geometry.rotateX(Math.PI / 2);
+  geometry.computeVertexNormals();
+  projectUV(geometry, SURFACE_STYLE[floor.material]?.metres ?? 1.5);
   const mesh = new THREE.Mesh(geometry, matFor(floor.material, levelInfo.id));
   mesh.position.y = RAISED.has(floor.material) ? 0 : 0.005;
   mesh.receiveShadow = true;

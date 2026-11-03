@@ -6,7 +6,7 @@ import { loadLevels } from '../src/data/levels.js';
 
 describe('materials', () => {
   it('names the palette colours', () => {
-    expect(PALETTE.stone).toBe('#7a7f85');
+    expect(PALETTE.stone).toBe('#77717b');
     expect(PALETTE.windowGlow).toBe('#ffb347');
     expect(Object.keys(PALETTE)).toContain('cobbles');
   });

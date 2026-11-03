@@ -1,6 +1,7 @@
 import './style.css';
 import { createScene, webglSupported, parseCamera } from './scene.js';
 import { setupLighting, fitShadowToBox } from './lighting.js';
+import { buildGlowField } from './atmosphere.js';
 import { materialFor } from './materials.js';
 import { loadLevels, LEVELS, LEVEL_BY_ID, levelIndex } from './data/levels.js';
 import { validateLevel } from './data/schema.js';
@@ -56,13 +57,19 @@ async function start(container, view, lights) {
   }
   const propLibrary = await PropLibrary.load(propCatalog, { matFor: materialFor, baseUrl: import.meta.env.BASE_URL });
   const stack = new LevelStack(view.scene, levels, { matFor: materialFor, propLibrary });
+  const glowField = buildGlowField(levels, {
+    elevations: new Map(LEVELS.map((level) => [level.id, level.elevation])),
+    order: LEVELS.map((level) => level.id),
+  });
+  view.scene.add(glowField.points);
   fitShadowToBox(lights.moon, stack.allBounds());
   const calque = new Calque(view.scene, calibration, { baseUrl: import.meta.env.BASE_URL });
   const labels = new Labels(view.scene, levels);
   stack.addEventListener('change', (e) => {
     calque.setLevel(e.detail.id);
     labels.setLevel(e.detail.id);
-    view.ground.visible = levelIndex(e.detail.id) >= levelIndex('rdc');
+    glowField.select(e.detail.id);
+    view.environment.visible = levelIndex(e.detail.id) >= levelIndex('rdc');
   });
   const home = () => view.home(stack.selected === 'toits' ? null : stack.bounds(stack.selected));
   mountLevelSelector(container, stack, { onHome: home, labels, calque });
@@ -91,7 +98,7 @@ async function start(container, view, lights) {
     view.controls.target.set(...cam.target);
     view.controls.update();
   }
-  return { stack, calque, labels };
+  return { stack, calque, labels, glowField };
 }
 
 /** Draw calls and frame rate in a corner, for checking the budget on the table's machine (key F). */

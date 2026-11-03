@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { projectUV, SURFACE_STYLE } from '../surfaces.js';
 
 export const EAVES_M = 0.4;
 
@@ -40,7 +41,41 @@ export function buildRoof(roof, matFor) {
   const geometry = new THREE.BufferGeometry();
   geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
   geometry.setIndex(index);
-  return finish(geometry, roof, matFor);
+  const mesh = finish(geometry, roof, matFor);
+  const cap = new THREE.Mesh(
+    projectUV(new THREE.CylinderGeometry(0.13, 0.13, run + EAVES_M * 1.5, 7, 1), SURFACE_STYLE[roof.material]?.metres ?? 1.15),
+    matFor(roof.material),
+  );
+  cap.name = 'faîtage';
+  if (alongX) {
+    cap.position.set(x + run / 2, h - 0.14, z + d / 2);
+    cap.rotation.z = Math.PI / 2;
+  } else {
+    cap.position.set(x + w / 2, h - 0.14, z + run / 2);
+    cap.rotation.x = Math.PI / 2;
+  }
+  cap.castShadow = true;
+  mesh.add(cap);
+  const fasciaMaterial = matFor('timber');
+  for (const side of [-1, 1]) {
+    const fascia = new THREE.Mesh(
+      projectUV(
+        new THREE.BoxGeometry(run + EAVES_M * 2, 0.16, 0.12),
+        SURFACE_STYLE.timber.metres,
+      ),
+      fasciaMaterial,
+    );
+    fascia.name = 'rive en bois';
+    if (alongX) {
+      fascia.position.set(x + run / 2, -drop + 0.08, z + d / 2 + side * (span / 2 + EAVES_M - 0.06));
+    } else {
+      fascia.rotation.y = Math.PI / 2;
+      fascia.position.set(x + w / 2 + side * (span / 2 + EAVES_M - 0.06), -drop + 0.08, z + run / 2);
+    }
+    fascia.castShadow = true;
+    mesh.add(fascia);
+  }
+  return mesh;
 }
 
 // A pyramid over `rect`: four slopes meeting at an apex above the centre, eaves all round.
@@ -60,6 +95,7 @@ function buildPyramid(roof, matFor) {
 
 function finish(geometry, roof, matFor) {
   geometry.computeVertexNormals();
+  projectUV(geometry, SURFACE_STYLE[roof.material]?.metres ?? 1.2);
   const mesh = new THREE.Mesh(geometry, matFor(roof.material));
   mesh.name = `roof over ${roof.covers}`;
   mesh.castShadow = true;

@@ -1,20 +1,21 @@
 import * as THREE from 'three';
+import { surfaceMaps, SURFACE_STYLE } from './surfaces.js';
 
 /** Flat colours of the low-poly palette, by material name. */
 export const PALETTE = {
-  enclosure: '#6e6a66',
-  stone: '#7a7f85',
-  timber: '#6b4a2b',
-  cob: '#d9c6a3',
-  partition: '#c9b48e',
-  planks: '#a9783f',
-  dirt: '#8a6b45',
-  flagstone: '#7d7b74',
-  cobbles: '#6f7f78',
+  enclosure: '#625e66',
+  stone: '#77717b',
+  timber: '#583619',
+  cob: '#c9a56d',
+  partition: '#b99c69',
+  planks: '#9c632e',
+  dirt: '#6c4a2f',
+  flagstone: '#756d69',
+  cobbles: '#586b69',
   water: '#3d6b74',
-  tile: '#8e4a34',
-  thatch: '#b89b5a',
-  slate: '#4e5560',
+  tile: '#6f2d25',
+  thatch: '#94743a',
+  slate: '#3b4557',
   windowGlow: '#ffb347',
   gold: '#c9a227',
   silver: '#c8ccd4',
@@ -57,6 +58,8 @@ export function materialFor(name, levelId = 'shared') {
   const key = `${name}|${levelId}`;
   if (cache.has(key)) return cache.get(key);
   const color = PALETTE[name] ?? PALETTE.stone;
+  const surface = surfaceMaps(name);
+  const treatment = SURFACE_STYLE[name];
   const material = new THREE.MeshStandardMaterial({
     color,
     flatShading: true,
@@ -65,7 +68,10 @@ export function materialFor(name, levelId = 'shared') {
     roughness: 0.9,
     metalness: 0,
     side: THREE.DoubleSide,
-    vertexColors: FLOORS.has(name),
+    vertexColors: FLOORS.has(name) || Boolean(treatment),
+    map: surface?.map ?? null,
+    bumpMap: surface?.bumpMap ?? null,
+    bumpScale: treatment?.bump ?? 0,
   });
   if (name === 'windowGlow') {
     material.emissive = new THREE.Color(color);

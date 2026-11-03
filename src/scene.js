@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { CSS2DRenderer } from 'three/addons/renderers/CSS2DRenderer.js';
+import { applyAtmosphere, buildGroundGeometry, buildHorizonForest } from './atmosphere.js';
 
 export const HOME = {
   position: new THREE.Vector3(60, 45, 70),
@@ -78,14 +79,14 @@ export function goHome(view, box = null, { animate = true } = {}) {
 
 export function createScene(container, { width = window.innerWidth, height = window.innerHeight } = {}) {
   const scene = new THREE.Scene();
-  scene.background = new THREE.Color('#0e1116');
 
   const camera = new THREE.PerspectiveCamera(45, width / height, 0.1, 500);
   camera.position.copy(HOME.position);
 
-  const renderer = new THREE.WebGLRenderer({ antialias: true });
+  const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, powerPreference: 'high-performance' });
   renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
   configureRenderer(renderer);
+  applyAtmosphere(scene, renderer);
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
   renderer.toneMappingExposure = 1.6;
   renderer.setSize(width, height);
@@ -102,16 +103,20 @@ export function createScene(container, { width = window.innerWidth, height = win
   controls.target.copy(HOME.target);
   controls.saveState();
 
+  const environment = new THREE.Group();
+  environment.name = 'environnement';
+  environment.position.set(22, 0, 17);
   const ground = new THREE.Mesh(
-    new THREE.PlaneGeometry(200, 200),
-    new THREE.MeshStandardMaterial({ color: '#8a6b45' }),
+    buildGroundGeometry(),
+    new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 1, flatShading: true }),
   );
-  ground.rotation.x = -Math.PI / 2;
-  ground.position.set(22, -0.01, 17);
+  ground.position.y = -0.01;
   ground.receiveShadow = true;
-  scene.add(ground);
+  const forest = buildHorizonForest();
+  environment.add(ground, forest);
+  scene.add(environment);
 
-  const view = { scene, camera, perspective: camera, renderer, labelRenderer, controls, ground, setTopView, home: (box) => goHome(view, box) };
+  const view = { scene, camera, perspective: camera, renderer, labelRenderer, controls, environment, ground, forest, setTopView, home: (box) => goHome(view, box) };
 
   // Eased camera move; a second call cancels the first.
   let flight = 0;
