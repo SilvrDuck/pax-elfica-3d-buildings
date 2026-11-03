@@ -1,5 +1,6 @@
 import './style.css';
-import { createScene, webglSupported, parseCamera } from './scene.js';
+import { createScene, webglSupported, parseCamera, parseVector } from './scene.js';
+import { setWallFloor } from './build/ao.js';
 import { setupLighting, fitShadowToBox } from './lighting.js';
 import { materialFor } from './materials.js';
 import { loadLevels, LEVELS, LEVEL_BY_ID, levelIndex } from './data/levels.js';
@@ -50,6 +51,11 @@ export function mount(container) {
 
 async function start(container, view, lights) {
   const params = new URLSearchParams(window.location.search);
+  // Debug parameters for the art-direction exchanges: `moon=x,y,z` moves the moon,
+  // `ao=0.55` sets how dark floors bake at the foot of walls.
+  const moonAt = parseVector(params.get('moon'));
+  if (moonAt) lights.moon.position.set(...moonAt);
+  if (params.has('ao')) setWallFloor(params.get('ao'));
   const levels = await loadLevels();
   for (const [id, json] of levels) {
     for (const problem of validateLevel(json)) console.warn(`Niveau ${id} : ${problem}`);

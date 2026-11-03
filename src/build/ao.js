@@ -2,7 +2,14 @@ import * as THREE from 'three';
 import { THICKNESS } from './geometry.js';
 
 const WALL_REACH = 0.7;
-const WALL_FLOOR = 0.55;
+let WALL_FLOOR = 0.55;
+
+/** Darkest factor at the foot of a wall (0.2–1); returns the value in force. */
+export function setWallFloor(v) {
+  const n = Number(v);
+  WALL_FLOOR = Math.min(1, Math.max(0.2, Number.isFinite(n) ? n : 0.55));
+  return WALL_FLOOR;
+}
 const PROP_FLOOR = 0.7;
 const PROP_FADE = 0.4;
 

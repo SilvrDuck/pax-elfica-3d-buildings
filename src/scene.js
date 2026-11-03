@@ -44,6 +44,13 @@ export function applySize({ camera, renderer, labelRenderer }, width, height) {
   labelRenderer.setSize(width, height);
 }
 
+/** Three comma-separated numbers from a URL parameter, or null. */
+export function parseVector(text) {
+  if (!text) return null;
+  const n = text.split(',').map(Number);
+  return n.length === 3 && n.every(Number.isFinite) ? n : null;
+}
+
 /** `cam=x,y,z,tx,ty,tz` from the URL: camera position and orbit target in world metres. */
 export function parseCamera(text) {
   if (!text) return null;
